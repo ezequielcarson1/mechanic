@@ -1,0 +1,85 @@
+export type AssistanceType = 'immediate' | 'scheduled' | 'videocall';
+
+export interface AssistanceRequest {
+    id: string;
+    type: AssistanceType;
+    title: string;
+    car: string;
+    address: string;
+    notes?: string;
+    budget: string;
+    distance?: string;
+    date?: string;
+    userId?: string;
+    mechanicId?: string;
+    status?: 'pending' | 'accepted' | 'canceled' | 'offered';
+    locationLat?: number;
+    locationLng?: number;
+    photos?: string[];
+    vehicleId?: string;
+    description?: string;
+    zip?: string;
+}
+
+export interface UserData {
+    id: string;
+    email: string;
+    name: string;
+    surname: string;
+    phone: string;
+    dob: string;
+    profileImage?: string;
+    role: 'mechanic' | 'user';
+    address?: {
+        street?: string;
+        apartment?: string;
+        city?: string;
+        state?: string;
+        zip?: string;
+    };
+}
+
+export interface Vehicle {
+    id: string;
+    userId?: string;
+    make: string;
+    model: string;
+    color: string;
+    plate: string;
+    vin: string;
+    details: string;
+}
+
+export interface IVehicleDAO {
+    getByUser(userId: string): Promise<Vehicle[]>;
+    create(vehicle: Vehicle): Promise<Vehicle>;
+    update(id: string, updates: Partial<Vehicle>): Promise<void>;
+    delete(id: string): Promise<void>;
+}
+
+export interface IUserDAO {
+    getAll(): Promise<UserData[]>;
+    getById(id: string): Promise<UserData | null>;
+    login(phone: string): Promise<UserData | null>;
+    checkPhoneExists(phone: string): Promise<boolean>;
+    register(setupData: any): Promise<any>;
+    update(id: string, updates: Partial<UserData>): Promise<void>;
+}
+
+export interface IAssistanceDAO {
+    getAll(filters?: { userId?: string; mechanicId?: string; status?: string; zip?: string }): Promise<AssistanceRequest[]>;
+    getById(id: string): Promise<AssistanceRequest | null>;
+    updateStatus(id: string, mechanicId: string, status: string): Promise<void>;
+    create(request: Partial<AssistanceRequest>): Promise<AssistanceRequest>;
+}
+
+export interface IAppointmentDAO {
+    getAll(filters?: { userId?: string; mechanicId?: string }): Promise<any[]>;
+    create(appointment: any): Promise<any>;
+    update(id: string, updates: any): Promise<void>;
+}
+
+export interface ISetupDAO {
+    getProgress(key: string): Promise<any>;
+    saveProgress(key: string, value: any): Promise<void>;
+}
