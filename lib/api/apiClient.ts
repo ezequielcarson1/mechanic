@@ -4,12 +4,12 @@ import { Platform } from 'react-native';
 const getBaseUrl = () => {
     if (__DEV__) {
         if (Platform.OS === 'android') {
-            return 'http://10.0.2.2:3000';
+            return 'http://20.124.131.193:3000';
         }
-        return 'http://192.168.1.229:3000';
+        return 'http://20.124.131.193:3000';
     }
     // Production URL would go here
-    return 'https://api.mechanic.com';
+    return 'http://20.124.131.193:3000';
 };
 
 const BASE_URL = getBaseUrl();

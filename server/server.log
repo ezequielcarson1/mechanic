@@ -6697,3 +6697,14 @@
 [2026-02-18T18:53:04.649Z] [INFO] OPTIONS /api/users/4edcf783-5f46-4cef-a302-06b571d1d976 
 [2026-02-18T18:53:04.658Z] [INFO] DELETE /api/users/4edcf783-5f46-4cef-a302-06b571d1d976 
 [2026-02-18T18:53:34.169Z] [INFO] GET /api/users 
+[2026-02-20T16:06:18.874Z] [INFO] Client connected 
+[2026-02-20T16:06:18.894Z] [INFO] Registered user: 67125ea6-c050-4b6e-b4ce-e65e06941745 
+[2026-02-20T16:06:19.627Z] [INFO] Client connected 
+[2026-02-20T16:06:19.652Z] [INFO] Registered user: 67125ea6-c050-4b6e-b4ce-e65e06941745 
+[2026-02-20T16:06:29.188Z] [INFO] GET /api/assistance 
+[2026-02-20T16:06:29.205Z] [INFO] GET /api/appointments 
+[2026-02-20T16:06:29.216Z] [INFO] GET /api/users 
+[2026-02-20T16:06:29.242Z] [INFO] GET /api/users/check-phone/1234 
+[2026-02-20T16:06:29.251Z] [INFO] GET /api/assistance 
+[2026-02-20T16:06:29.294Z] [INFO] GET /api/appointments 
+[2026-02-20T16:06:29.312Z] [INFO] GET /api/users 

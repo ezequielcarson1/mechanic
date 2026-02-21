@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+// In Docker the nginx proxy rewrites /api → backend, so we use a relative base.
+// Locally set VITE_API_BASE_URL=http://192.168.1.229:3000/api (or your LAN IP) in admin-portal/.env.local
 const api = axios.create({
-    baseURL: 'http://192.168.1.229:3000/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
 });
 
 export const UserAPI = {

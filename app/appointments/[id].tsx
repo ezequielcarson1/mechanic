@@ -97,18 +97,13 @@ export default function AppointmentDetailScreen() {
     // Fetch mechanic details if appointment exists
     React.useEffect(() => {
         const fetchMechanic = async () => {
-            console.log('Fetching mechanic for appt:', appointment?.id);
-            console.log('Mechanic ID:', appointment?.mechanicId);
             if (appointment?.mechanicId) {
                 try {
                     const mechData = await userDAO.getById(appointment.mechanicId);
-                    console.log('Mechanic Data Fetched:', mechData);
                     setMechanic(mechData);
                 } catch (error) {
                     console.error('Error fetching mechanic:', error);
                 }
-            } else {
-                console.log('No mechanicId found in appointment');
             }
         };
         fetchMechanic();
@@ -121,7 +116,6 @@ export default function AppointmentDetailScreen() {
             if (!isUserRole && appointment?.userId) {
                 try {
                     const clientData = await userDAO.getById(appointment.userId);
-                    console.log('Client Data Fetched:', clientData);
                     setClient(clientData);
                 } catch (error) {
                     console.error('Error fetching client:', error);

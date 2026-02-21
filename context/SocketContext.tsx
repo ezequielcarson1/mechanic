@@ -34,7 +34,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     const connect = () => {
         // Replace with your actual server IP/URL. 
         // In dev, usually localhost or machine IP.
-        const WS_URL = 'ws://192.168.1.229:3000';
+        const WS_URL = 'ws://20.124.131.193:3000';
 
         console.log('[Socket] Connecting to', WS_URL);
         const ws = new WebSocket(WS_URL);
@@ -52,7 +52,6 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                console.log('[Socket] Received:', data);
                 setLastMessage(data);
             } catch (e) {
                 console.error('[Socket] Failed to parse message', e);
@@ -68,8 +67,8 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             reconnectTimeout.current = setTimeout(connect, 5000) as any;
         };
 
-        ws.onerror = (e) => {
-            console.error('[Socket] Error:', e);
+        ws.onerror = () => {
+            console.warn('[Socket] Could not connect to', WS_URL, '— server may be offline');
         };
 
         setSocket(ws);

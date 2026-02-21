@@ -2,7 +2,9 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const crypto = require('crypto');
 
-const dbPath = path.resolve(__dirname, 'mechanic.db');
+// DB_PATH env var lets Docker volumes persist data outside the container.
+// Default: same directory as db.js (original behaviour for local dev).
+const dbPath = process.env.DB_PATH || path.resolve(__dirname, 'mechanic.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Could not connect to database', err);

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-config
+  namespace: mechanic
+data:
+  PORT: "3000"
+  NODE_ENV: "production"
+  DB_PATH: "/app/db/mechanic.db"

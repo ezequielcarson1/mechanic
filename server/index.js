@@ -106,6 +106,11 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
+// Health Check Route for Kubernetes Probes
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 // Assistance Routes
 app.get('/api/assistance', async (req, res) => {
     try {
