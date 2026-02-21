@@ -1,8 +1,11 @@
-import { Calendar, LayoutDashboard, Settings, Users } from 'lucide-react';
+import { Calendar, LayoutDashboard, LogOut, Settings, Users } from 'lucide-react';
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
+    const { logout } = useAuth();
+
     const navItems = [
         { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
         { to: '/users', icon: Users, label: 'Users' },
@@ -34,6 +37,15 @@ const Sidebar = () => {
                     </NavLink>
                 ))}
             </nav>
+            <div className="p-4 border-t border-slate-800">
+                <button
+                    onClick={logout}
+                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-slate-400 hover:bg-red-500/10 hover:text-red-500"
+                >
+                    <LogOut size={20} />
+                    <span className="font-medium">Sign Out</span>
+                </button>
+            </div>
         </div>
     );
 };
