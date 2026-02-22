@@ -23,7 +23,8 @@ db.serialize(() => {
     phone TEXT,
     dob TEXT,
     profileImage TEXT,
-    role TEXT
+    role TEXT,
+    isOnline INTEGER DEFAULT 0
   )`);
 
   // User Addresses Table
@@ -135,7 +136,8 @@ db.serialize(() => {
     'ALTER TABLE assistance_requests ADD COLUMN photos TEXT',
     'ALTER TABLE assistance_requests ADD COLUMN vehicleId TEXT',
     'ALTER TABLE assistance_requests ADD COLUMN zip TEXT',
-    'ALTER TABLE appointments ADD COLUMN zip TEXT'
+    'ALTER TABLE appointments ADD COLUMN zip TEXT',
+    'ALTER TABLE users ADD COLUMN isOnline INTEGER DEFAULT 0'
   ];
 
   columnsToAdd.forEach(sql => {

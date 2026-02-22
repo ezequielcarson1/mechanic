@@ -1,22 +1,10 @@
-import { Platform } from 'react-native';
-
-// For Android emulator, localhost is 10.0.2.2
-const getBaseUrl = () => {
-    if (__DEV__) {
-        if (Platform.OS === 'android') {
-            return 'http://20.124.131.193:3000';
-        }
-        return 'http://20.124.131.193:3000';
-    }
-    // Production URL would go here
-    return 'http://20.124.131.193:3000';
-};
-
-const BASE_URL = getBaseUrl();
+import { ConfigService } from '../config/ConfigService';
 
 export const apiClient = {
     async get<T = any>(endpoint: string): Promise<T> {
-        const response = await fetch(`${BASE_URL}${endpoint}`);
+        await ConfigService.init(); // Ensure loaded before fetching
+        const baseUrl = ConfigService.getApiBaseUrl();
+        const response = await fetch(`${baseUrl}${endpoint}`);
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(`GET ${endpoint} failed: ${errorData.error || response.statusText}`);
@@ -25,7 +13,9 @@ export const apiClient = {
     },
 
     async post<T = any>(endpoint: string, data: any): Promise<T> {
-        const response = await fetch(`${BASE_URL}${endpoint}`, {
+        await ConfigService.init();
+        const baseUrl = ConfigService.getApiBaseUrl();
+        const response = await fetch(`${baseUrl}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -38,7 +28,9 @@ export const apiClient = {
     },
 
     async patch<T = any>(endpoint: string, data: any): Promise<T> {
-        const response = await fetch(`${BASE_URL}${endpoint}`, {
+        await ConfigService.init();
+        const baseUrl = ConfigService.getApiBaseUrl();
+        const response = await fetch(`${baseUrl}${endpoint}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -48,7 +40,9 @@ export const apiClient = {
     },
 
     async delete<T = any>(endpoint: string): Promise<T> {
-        const response = await fetch(`${BASE_URL}${endpoint}`, {
+        await ConfigService.init();
+        const baseUrl = ConfigService.getApiBaseUrl();
+        const response = await fetch(`${baseUrl}${endpoint}`, {
             method: 'DELETE',
         });
         if (!response.ok) throw new Error(`DELETE ${endpoint} failed: ${response.statusText}`);

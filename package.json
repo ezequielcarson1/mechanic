@@ -8,7 +8,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "backup": "tar --exclude='./node_modules' --exclude='./server/node_modules' --exclude='./admin-portal/node_modules' --exclude='./admin-portal/.next' --exclude='./admin-portal/out' --exclude='./admin-portal/dist' --exclude='./.git' --exclude='./.expo' --exclude='./.DS_Store' --exclude='./assets' -czf \"$HOME/Downloads/Mechanic_backup_$(date +%Y-%m-%d_%H-%M-%S).tar.gz\" .",
+    "upload": "bash ./scripts/upload.sh"
   },
   "dependencies": {
     "@expo-google-fonts/outfit": "^0.4.3",

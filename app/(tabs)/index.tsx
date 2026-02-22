@@ -1,15 +1,19 @@
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { useAppointments } from '@/context/AppointmentsContext';
 import { useUser } from '@/context/UserContext';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Award, Camera, Car, ChevronRight, CreditCard, Heart, HelpCircle, Lock, LogOut, PlugZap, Settings, User } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, isLoading, updateUser, logout } = useUser();
-  const [isOnline, setIsOnline] = useState(false);
+  const { appointments } = useAppointments();
+
+  const isOnline = user?.isOnline || false;
+
   const [showOnlineModal, setShowOnlineModal] = useState(false);
   const [showOfflineModal, setShowOfflineModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -65,17 +69,34 @@ export default function ProfileScreen() {
     if (targetStatus) {
       setShowOnlineModal(true);
     } else {
-      setShowOfflineModal(true);
+      // Check active appointments
+      const hasActiveAppointments = appointments.some(appt =>
+        ['accepted', 'scheduled', 'started'].includes(appt.status) && appt.status !== 'canceled' && appt.status !== 'completed'
+      );
+
+      if (hasActiveAppointments) {
+        if (Platform.OS === 'web') {
+          window.alert("You cannot go offline while you have active appointments.");
+        } else {
+          Alert.alert(
+            "Cannot go offline",
+            "You cannot go offline while you have active appointments.",
+            [{ text: "OK" }]
+          );
+        }
+      } else {
+        setShowOfflineModal(true);
+      }
     }
   };
 
-  const confirmOnline = () => {
-    setIsOnline(true);
+  const confirmOnline = async () => {
+    await updateUser({ isOnline: true });
     setShowOnlineModal(false);
   };
 
-  const confirmOffline = () => {
-    setIsOnline(false);
+  const confirmOffline = async () => {
+    await updateUser({ isOnline: false });
     setShowOfflineModal(false);
   };
 

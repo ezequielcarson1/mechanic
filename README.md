@@ -157,6 +157,27 @@ The services communicate on the following ports:
 
 Ensure the backend server is running for the app to function correctly.
 
+## 🌍 Environment Configuration (PROD/DEV)
+
+The application features a dynamic environment configuration system powered by `ConfigService`.
+
+### How it works
+1. On app startup, `ConfigService` attempts to fetch a JSON configuration from the remote `BOOTSTRAP_URL` (`https://bootstrap.mechanicapp.com/config`).
+2. If the fetch is successful, it caches the configuration locally using `AsyncStorage`.
+3. If the network is unavailable, it falls back to the cached version.
+4. If no cache exists, it uses a hardcoded safe `DEFAULT_FALLBACK_CONFIG`.
+
+### Endpoints
+The configuration provides dynamic URLs for the REST API and WebSockets:
+- **PROD**: Defaults to `http://20.124.131.193:3000` (API) and `ws://20.124.131.193:3000` (WS)
+- **DEV**: Defaults to `http://localhost:3000` (API) and `ws://localhost:3000` (WS)
+
+### Environment Selector UI
+If the backend configuration returns `allowEnvSwitch: true` (or if using the fallback during development), an `EnvSelector` component appears on the **Login** screen.
+- This toggle allows developers and QA to instantly switch between PROD and DEV endpoints without recompiling the app.
+- The `SocketContext` automatically disconnects and reconnects to the new WebSocket URL upon switching.
+- User selection is persisted locally across app restarts.
+
 ## 🤝 Contributing
 
 1. Fork the project

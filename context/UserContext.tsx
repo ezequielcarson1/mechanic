@@ -11,6 +11,7 @@ export interface UserData {
     dob: string;
     profileImage?: string;
     role: 'mechanic' | 'user';
+    isOnline?: boolean;
     address?: {
         street?: string;
         apartment?: string;

@@ -23,6 +23,7 @@ import { NotificationsProvider } from '@/context/NotificationsContext';
 import { SocketProvider } from '@/context/SocketContext';
 import { UserProvider } from '@/context/UserContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ConfigService } from '@/lib/config/ConfigService';
 import '../global.css';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -41,9 +42,13 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
+    async function prepare() {
+      await ConfigService.init();
+      if (loaded || error) {
+        SplashScreen.hideAsync();
+      }
     }
+    prepare();
   }, [loaded, error]);
 
   if (!loaded && !error) {

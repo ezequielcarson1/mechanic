@@ -6,11 +6,10 @@ import { AssistanceRequest } from '@/lib/dao/interfaces';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Calendar, Clock, SlidersHorizontal, Video } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native';
 
 export default function AssistFeedScreen() {
     const router = useRouter();
-    const [isAvailable, setIsAvailable] = useState(true);
     const [filter, setFilter] = useState<AssistanceType | null>(null);
     const [requests, setRequests] = useState<AssistanceRequest[]>([]);
     const [isLoadingRequests, setIsLoadingRequests] = useState(true);
@@ -71,6 +70,25 @@ export default function AssistFeedScreen() {
         );
     }
 
+    if (user?.role === 'mechanic' && !user.isOnline) {
+        return (
+            <View className="flex-1 bg-white justify-center items-center px-6">
+                <Text className="text-lg font-outfit-bold text-center text-gray-900 mb-4">
+                    You are currently offline
+                </Text>
+                <Text className="text-center text-gray-500 mb-6 font-outfit-medium">
+                    Please go to your Profile to go On-Line and see assistance requests.
+                </Text>
+                <TouchableOpacity
+                    className="bg-blue-600 py-3 px-6 rounded-lg"
+                    onPress={() => router.push('/(tabs)')}
+                >
+                    <Text className="text-white font-outfit-bold">Go to Profile</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
     const filteredRequests = filter
         ? requests.filter(req => req.type === filter)
         : requests;
@@ -100,19 +118,6 @@ export default function AssistFeedScreen() {
             <FlatList
                 ListHeaderComponent={
                     <View className="mb-4">
-                        {/* Availability Toggle */}
-                        {user?.role?.toLowerCase().trim() === 'mechanic' && (
-                            <View className="flex-row justify-between items-center mb-6">
-                                <Text className="text-gray-900 font-outfit-medium">Available to provide services</Text>
-                                <Switch
-                                    trackColor={{ false: '#767577', true: '#0047AB' }}
-                                    thumbColor={isAvailable ? '#fff' : '#f4f3f4'}
-                                    value={isAvailable}
-                                    onValueChange={setIsAvailable}
-                                />
-                            </View>
-                        )}
-
                         {/* Filter Icons */}
                         <View className="flex-row justify-between px-2 mb-6">
                             <FilterIcon type="immediate" icon={Clock} label="Immediate Assist" color="#1D4ED8" />

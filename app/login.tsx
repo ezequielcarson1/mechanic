@@ -1,3 +1,4 @@
+import { EnvSelector } from '@/components/EnvSelector';
 import { Button } from '@/components/ui/Button';
 import { GradientLayout } from '@/components/ui/GradientLayout';
 import { Input } from '@/components/ui/Input';
@@ -70,90 +71,93 @@ export default function LoginScreen() {
 
 
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <GradientLayout className="flex-1" resizeMode="cover">
-                <View className="flex-1 justify-end px-6 pb-12">
-                    <View className="flex-1" />
+        <View className="flex-1">
+            <EnvSelector />
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+                <GradientLayout className="flex-1" resizeMode="cover">
+                    <View className="flex-1 justify-end px-6 pb-12">
+                        <View className="flex-1" />
 
-                    <Text className="text-white text-3xl font-outfit-bold text-center mb-8">
-                        Get Started
-                    </Text>
+                        <Text className="text-white text-3xl font-outfit-bold text-center mb-8">
+                            Get Started
+                        </Text>
 
-                    <View className="w-full mb-6">
-                        {method === 'email' ? (
-                            <>
-                                <Input
-                                    placeholder="Username"
-                                    leftIcon={<Ionicons name="person-outline" size={20} color="#9CA3AF" />}
-                                    containerClassName="mb-4"
-                                />
-                                <Input
-                                    placeholder="Password"
-                                    isPassword
-                                    leftIcon={<Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />}
-                                    containerClassName="mb-4"
-                                />
-                            </>
-                        ) : (
-                            <View className="flex-row gap-3 mb-4">
-                                <View className="bg-white rounded-xl px-4 justify-center items-center h-[52px]">
-                                    <Text className="font-outfit-medium text-black text-base">🇺🇸 + 1</Text>
+                        <View className="w-full mb-6">
+                            {method === 'email' ? (
+                                <>
+                                    <Input
+                                        placeholder="Username"
+                                        leftIcon={<Ionicons name="person-outline" size={20} color="#9CA3AF" />}
+                                        containerClassName="mb-4"
+                                    />
+                                    <Input
+                                        placeholder="Password"
+                                        isPassword
+                                        leftIcon={<Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />}
+                                        containerClassName="mb-4"
+                                    />
+                                </>
+                            ) : (
+                                <View className="flex-row gap-3 mb-4">
+                                    <View className="bg-white rounded-xl px-4 justify-center items-center h-[52px]">
+                                        <Text className="font-outfit-medium text-black text-base">🇺🇸 + 1</Text>
+                                    </View>
+                                    <Input
+                                        placeholder="(000) 000-0000"
+                                        containerClassName="flex-1 h-[52px]"
+                                        keyboardType="phone-pad"
+                                        value={phoneNumber}
+                                        onChangeText={handlePhoneChange}
+                                        maxLength={14}
+                                    />
                                 </View>
-                                <Input
-                                    placeholder="(000) 000-0000"
-                                    containerClassName="flex-1 h-[52px]"
-                                    keyboardType="phone-pad"
-                                    value={phoneNumber}
-                                    onChangeText={handlePhoneChange}
-                                    maxLength={14}
-                                />
-                            </View>
-                        )}
-                    </View>
+                            )}
+                        </View>
 
-                    <Button
-                        onPress={handleLogin}
-                        size="lg"
-                        className="mb-6 border-white/40 border bg-blue-600/20 backdrop-blur-sm"
-                        isLoading={isLoading}
-                    >
-                        Login
-                    </Button>
-
-                    <Text className="text-white/80 text-center mb-4 underline font-outfit-regular">Or</Text>
-
-                    <View className="mb-8">
                         <Button
-                            variant="social"
-                            className="mb-3"
-                            leftIcon={<Image source={require('@/assets/images/google.png')} style={{ width: 20, height: 20 }} resizeMode="contain" />}
+                            onPress={handleLogin}
+                            size="lg"
+                            className="mb-6 border-white/40 border bg-blue-600/20 backdrop-blur-sm"
+                            isLoading={isLoading}
                         >
-                            Sign in with Google
+                            Login
                         </Button>
-                        <Button
-                            variant="social"
-                            className="mb-3"
-                            leftIcon={<Image source={require('@/assets/images/apple.png')} style={{ width: 20, height: 20 }} resizeMode="contain" />}
-                        >
-                            Sign in with Apple
-                        </Button>
-                        <Button
-                            variant="social"
-                            onPress={() => setMethod(method === 'email' ? 'mobile' : 'email')}
-                            leftIcon={<Ionicons name="mail-outline" size={20} color="black" />}
-                        >
-                            {method === 'email' ? 'Sign in with Mobile' : 'Sign in with Email'}
-                        </Button>
-                    </View>
 
-                    <View className="flex-row justify-center">
-                        <Text className="text-white/80 font-outfit-regular">Don't have an account? </Text>
-                        <TouchableOpacity onPress={() => router.push('/setup')}>
-                            <Text className="text-white font-outfit-bold underline">Sign Up</Text>
-                        </TouchableOpacity>
+                        <Text className="text-white/80 text-center mb-4 underline font-outfit-regular">Or</Text>
+
+                        <View className="mb-8">
+                            <Button
+                                variant="social"
+                                className="mb-3"
+                                leftIcon={<Image source={require('@/assets/images/google.png')} style={{ width: 20, height: 20 }} resizeMode="contain" />}
+                            >
+                                Sign in with Google
+                            </Button>
+                            <Button
+                                variant="social"
+                                className="mb-3"
+                                leftIcon={<Image source={require('@/assets/images/apple.png')} style={{ width: 20, height: 20 }} resizeMode="contain" />}
+                            >
+                                Sign in with Apple
+                            </Button>
+                            <Button
+                                variant="social"
+                                onPress={() => setMethod(method === 'email' ? 'mobile' : 'email')}
+                                leftIcon={<Ionicons name="mail-outline" size={20} color="black" />}
+                            >
+                                {method === 'email' ? 'Sign in with Mobile' : 'Sign in with Email'}
+                            </Button>
+                        </View>
+
+                        <View className="flex-row justify-center">
+                            <Text className="text-white/80 font-outfit-regular">Don't have an account? </Text>
+                            <TouchableOpacity onPress={() => router.push('/setup')}>
+                                <Text className="text-white font-outfit-bold underline">Sign Up</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
-            </GradientLayout>
-        </TouchableWithoutFeedback>
+                </GradientLayout>
+            </TouchableWithoutFeedback>
+        </View>
     );
 }

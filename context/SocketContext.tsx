@@ -1,4 +1,5 @@
 import { useUser } from '@/context/UserContext';
+import { ConfigService } from '@/lib/config/ConfigService';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
 interface SocketContextType {
@@ -14,16 +15,38 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [lastMessage, setLastMessage] = useState<any>(null);
+    // Keep reference to the latest WS instance so listener can close it and reconnect
+    const currentSocket = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
 
+    // Initial connection logic & listener
     useEffect(() => {
         if (!user?.id) return;
 
-        connect();
+        // Reconnect if config changes while we are authenticated
+        const handleConfigChange = () => {
+            console.log('[Socket] Config changed, reconnecting...');
+            if (currentSocket.current) {
+                // Remove onclose to prevent the auto-reconnect from firing while we manually reconnect
+                currentSocket.current.onclose = null;
+                currentSocket.current.close();
+            }
+            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+            connect();
+        };
+
+        ConfigService.addListener(handleConfigChange);
+
+        // Ensure config is initialized, then connect
+        ConfigService.init().then(() => {
+            connect();
+        });
 
         return () => {
-            if (socket) {
-                socket.close();
+            ConfigService.removeListener(handleConfigChange);
+            if (currentSocket.current) {
+                currentSocket.current.onclose = null;
+                currentSocket.current.close();
             }
             if (reconnectTimeout.current) {
                 clearTimeout(reconnectTimeout.current);
@@ -32,12 +55,11 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     }, [user?.id]);
 
     const connect = () => {
-        // Replace with your actual server IP/URL. 
-        // In dev, usually localhost or machine IP.
-        const WS_URL = 'ws://20.124.131.193:3000';
+        const WS_URL = ConfigService.getWsUrl();
 
         console.log('[Socket] Connecting to', WS_URL);
         const ws = new WebSocket(WS_URL);
+        currentSocket.current = ws;
 
         ws.onopen = () => {
             console.log('[Socket] Connected');
