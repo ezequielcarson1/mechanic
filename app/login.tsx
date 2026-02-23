@@ -127,16 +127,18 @@ export default function LoginScreen() {
 
                         <View className="mb-8">
                             <Button
-                                variant="social"
+                                variant="google"
                                 className="mb-3"
-                                leftIcon={<Image source={require('@/assets/images/google.png')} style={{ width: 20, height: 20 }} resizeMode="contain" />}
+                                leftIcon={<Image source={require('@/assets/brands/google.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />}
+                                accessibilityLabel="Sign in with Google"
                             >
                                 Sign in with Google
                             </Button>
                             <Button
-                                variant="social"
+                                variant="apple"
                                 className="mb-3"
-                                leftIcon={<Image source={require('@/assets/images/apple.png')} style={{ width: 20, height: 20 }} resizeMode="contain" />}
+                                leftIcon={<Image source={require('@/assets/brands/apple.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />}
+                                accessibilityLabel="Sign in with Apple"
                             >
                                 Sign in with Apple
                             </Button>

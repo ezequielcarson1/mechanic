@@ -1,11 +1,12 @@
-import { Car, ClipboardList, Clock, MapPin } from 'lucide-react-native';
+import { Car, ClipboardList, Clock, MapPin, ShieldCheck } from 'lucide-react-native';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-export type AssistanceType = 'immediate' | 'scheduled' | 'videocall';
+export type AssistanceType = 'immediate' | 'scheduled' | 'videocall' | 'witness';
 
 interface AssistanceCardProps {
     id: string;
     type: AssistanceType;
+    assistanceType?: string;
     title: string;
     car: string;
     notes?: string;
@@ -16,20 +17,26 @@ interface AssistanceCardProps {
     isAccepted?: boolean;
 }
 
-export function AssistanceCard({ id, type, title, car, notes, address, distance, budget, onAccept, isAccepted }: AssistanceCardProps) {
+export function AssistanceCard({ id, type, assistanceType, title, car, notes, address, distance, budget, onAccept, isAccepted }: AssistanceCardProps) {
 
     const getHeaderColor = () => {
         switch (type) {
             case 'immediate': return 'bg-blue-700';
+            case 'witness': return 'bg-blue-700';
             case 'scheduled': return 'bg-blue-600';
             case 'videocall': return 'bg-cyan-500';
-            default: return 'bg-blue-600';
+            default:
+                if (assistanceType === 'witness') return 'bg-blue-700';
+                return 'bg-blue-600';
         }
     };
 
     const getHeaderTitle = () => {
+        if (assistanceType === 'witness') return 'ACCIDENT ASSISTANCE';
+
         switch (type) {
             case 'immediate': return 'Immediate Assistance';
+            case 'witness': return 'ACCIDENT ASSISTANCE';
             case 'scheduled': return 'Scheduled Assistance';
             case 'videocall': return 'Video Call';
             default: return 'Assistance';
@@ -37,6 +44,7 @@ export function AssistanceCard({ id, type, title, car, notes, address, distance,
     };
 
     const getIcon = () => {
+        if (assistanceType === 'witness' || type === 'witness') return <ShieldCheck size={16} color="white" />;
         switch (type) {
             case 'immediate': return <Clock size={16} color="white" />;
             case 'scheduled': return <ClipboardList size={16} color="white" />;

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Calendar, ChevronLeft, Clock, Video } from 'lucide-react-native';
+import { Calendar, ChevronLeft, Clock, ShieldCheck, Video } from 'lucide-react-native';
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
@@ -58,6 +58,19 @@ export default function RequestAssistanceTypeScreen() {
                         <View className="flex-1">
                             <Text className="text-blue-900 font-outfit-bold text-base uppercase">VIDEO CALL ASSISTANCE</Text>
                             <Text className="text-blue-600 font-outfit-medium text-xs tracking-widest">DIY - ON DEMAND</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() => router.push({ pathname: '/request-assistance/select-vehicle', params: { type: 'witness' } })}
+                        className="bg-white border border-blue-200 rounded-xl p-4 flex-row items-center shadow-sm"
+                    >
+                        <View className="w-12 h-12 bg-blue-100 rounded-full justify-center items-center mr-4">
+                            <ShieldCheck size={24} color="#1D4ED8" />
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-blue-900 font-outfit-bold text-base uppercase">ACCIDENT</Text>
+                            <Text className="text-blue-600 font-outfit-medium text-xs tracking-widest">24HS PERIOD TIME</Text>
                         </View>
                     </TouchableOpacity>
                 </View>

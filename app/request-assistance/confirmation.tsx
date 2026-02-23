@@ -51,6 +51,7 @@ export default function ConfirmationScreen() {
                 notes: typeof details === 'string' ? details : '',
                 description: typeof details === 'string' ? details : '',
                 type: type as any,
+                assistanceType: type as string,
                 vehicleId: vehicleId as string,
                 car: vehicleStr,
                 address: addr as string,
@@ -80,6 +81,7 @@ export default function ConfirmationScreen() {
             case 'immediate': return 'Immediate Assistance';
             case 'scheduled': return 'Scheduled Assistance';
             case 'videocall': return 'Video Call';
+            case 'witness': return 'Accident Assistance';
             default: return 'Assistance';
         }
     };
@@ -116,7 +118,7 @@ export default function ConfirmationScreen() {
                         <View>
                             <Text className="font-outfit-bold text-gray-900 text-base">Timeframe:</Text>
                             <Text className="font-outfit-regular text-gray-700">
-                                {type === 'immediate' ? '4 Hs' : type === 'scheduled' ? '7 Days' : 'On Demand'}
+                                {type === 'immediate' || type === 'witness' ? '4 Hs' : type === 'scheduled' ? '7 Days' : 'On Demand'}
                             </Text>
                         </View>
 

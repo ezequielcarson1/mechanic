@@ -82,15 +82,15 @@ class AppointmentDAO {
                 id, type, title, date, time, car, address, zip, notes, budget, status,
                 acceptedAt, currentStatus, additionalFunds, clientReview,
                 isReviewSubmitted, isStatusUpdated, cancelReason, startedAt, completedAt,
-                userId, mechanicId
+                userId, mechanicId, assistanceType
             } = appointment;
 
             const sql = `INSERT OR REPLACE INTO appointments (
         id, type, title, date, time, car, address, zip, notes, budget, status, 
         acceptedAt, currentStatus, additionalFunds, clientReview,
         isReviewSubmitted, isStatusUpdated, cancelReason, startedAt, completedAt,
-        userId, mechanicId
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        userId, mechanicId, assistanceType
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             const params = [
                 id, type, title, date, time, car, address, zip, notes, budget, status,
@@ -100,7 +100,7 @@ class AppointmentDAO {
                 isReviewSubmitted ? 1 : 0,
                 isStatusUpdated ? 1 : 0,
                 cancelReason, startedAt, completedAt,
-                userId, mechanicId
+                userId, mechanicId, assistanceType
             ].map(v => v === undefined ? null : v);
 
             db.run(sql, params, function (err) {

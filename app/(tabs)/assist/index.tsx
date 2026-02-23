@@ -4,7 +4,7 @@ import { useUser } from '@/context/UserContext';
 import { assistanceDAO } from '@/lib/dao/AssistanceDAO';
 import { AssistanceRequest } from '@/lib/dao/interfaces';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Calendar, Clock, SlidersHorizontal, Video } from 'lucide-react-native';
+import { Calendar, Clock, ShieldCheck, SlidersHorizontal, Video } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from 'react-native';
 
@@ -90,7 +90,11 @@ export default function AssistFeedScreen() {
     }
 
     const filteredRequests = filter
-        ? requests.filter(req => req.type === filter)
+        ? requests.filter(req => {
+            if (filter === 'witness') return req.assistanceType === 'witness' || req.type === 'witness';
+            if (filter === 'immediate') return req.type === 'immediate' && req.assistanceType !== 'witness';
+            return req.type === filter;
+        })
         : requests;
 
     const FilterIcon = ({ type, icon: Icon, label, color }: { type: AssistanceType, icon: any, label: string, color: string }) => (
@@ -102,7 +106,7 @@ export default function AssistFeedScreen() {
                     setFilter(filter === type ? null : type);
                 }
             }}
-            className="items-center w-[30%]"
+            className="items-center w-[22%]"
         >
             <View className={`w-14 h-14 rounded-full justify-center items-center mb-1 bg-gray-100 ${filter === type ? 'border-2 border-blue-500' : ''}`}>
                 <Icon size={24} color={color} />
@@ -120,9 +124,10 @@ export default function AssistFeedScreen() {
                     <View className="mb-4">
                         {/* Filter Icons */}
                         <View className="flex-row justify-between px-2 mb-6">
-                            <FilterIcon type="immediate" icon={Clock} label="Immediate Assist" color="#1D4ED8" />
-                            <FilterIcon type="scheduled" icon={Calendar} label="Scheduled Assist" color="#3B82F6" />
-                            <FilterIcon type="videocall" icon={Video} label="Video Call DIY" color="#06caf0" />
+                            <FilterIcon type="immediate" icon={Clock} label="Immediate" color="#1D4ED8" />
+                            <FilterIcon type="witness" icon={ShieldCheck} label="Accident" color="#1D4ED8" />
+                            <FilterIcon type="scheduled" icon={Calendar} label="Scheduled" color="#3B82F6" />
+                            <FilterIcon type="videocall" icon={Video} label="Video Call" color="#06caf0" />
                         </View>
 
                         {/* Promo Banner - Only for Mechanics */}
@@ -157,6 +162,7 @@ export default function AssistFeedScreen() {
                         <AssistanceCard
                             id={item.id}
                             type={item.type}
+                            assistanceType={item.assistanceType}
                             title={item.title}
                             car={item.car}
                             notes={item.notes}
@@ -167,6 +173,7 @@ export default function AssistFeedScreen() {
                                 pathname: `/assist/${item.id}` as any,
                                 params: {
                                     type: item.type,
+                                    assistanceType: item.assistanceType || '',
                                     title: item.title,
                                     car: item.car,
                                     address: item.address,

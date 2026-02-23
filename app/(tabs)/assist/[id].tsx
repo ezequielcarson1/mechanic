@@ -8,13 +8,13 @@ import { useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function AssistDetailScreen() {
-    const { id, type, title, car, address, zip, budget, distance, userId } = useLocalSearchParams();
+    const { id, type, assistanceType, title, car, address, zip, budget, distance, userId } = useLocalSearchParams();
     const router = useRouter();
     const navigation = useNavigation();
     const { user } = useUser();
     const { appointments, addAppointment } = useAppointments();
 
-    const isImmediate = type === 'immediate' || type === 'videocall';
+    const isImmediate = type === 'immediate' || type === 'videocall' || type === 'witness' || assistanceType === 'witness';
     const isVideo = type === 'videocall';
 
     const [showNotification, setShowNotification] = useState(false);
@@ -86,7 +86,7 @@ export default function AssistDetailScreen() {
                 {/* Header Section */}
                 <View className={`px-4 py-4 ${isVideo ? 'bg-cyan-600' : 'bg-blue-600'}`}>
                     <Text className="text-white font-outfit-bold text-lg text-center">
-                        {isVideo ? 'Video Call Assistance' : isImmediate ? 'Immediate Assistance' : 'Scheduled Assistance'}
+                        {assistanceType === 'witness' ? 'ACCIDENT ASSISTANCE' : isVideo ? 'Video Call Assistance' : isImmediate ? 'Immediate Assistance' : 'Scheduled Assistance'}
                     </Text>
                 </View>
 

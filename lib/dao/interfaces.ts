@@ -1,8 +1,9 @@
-export type AssistanceType = 'immediate' | 'scheduled' | 'videocall';
+export type AssistanceType = 'immediate' | 'scheduled' | 'videocall' | 'witness';
 
 export interface AssistanceRequest {
     id: string;
     type: AssistanceType;
+    assistanceType?: string;
     title: string;
     car: string;
     address: string;

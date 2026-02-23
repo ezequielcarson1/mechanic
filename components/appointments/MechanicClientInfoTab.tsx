@@ -5,6 +5,7 @@ import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 interface MechanicClientInfoTabProps {
     client: any;
     appointmentType?: string;
+    assistanceType?: string;
     rating: number;
     setRating: (rating: number) => void;
     selectedOption: string;
@@ -18,6 +19,7 @@ interface MechanicClientInfoTabProps {
 export function MechanicClientInfoTab({
     client,
     appointmentType,
+    assistanceType,
     rating,
     setRating,
     selectedOption,
@@ -42,9 +44,10 @@ export function MechanicClientInfoTab({
                     <Ionicons name="construct" size={24} color="white" />
                 </View>
                 <Text className="text-white font-outfit-bold text-lg">
-                    {appointmentType === 'immediate' ? 'Immediate Assistance' :
-                        appointmentType === 'videocall' || appointmentType === 'video' ? 'Video Call Assistance' :
-                            'Scheduled Assistance'}
+                    {assistanceType === 'witness' ? 'ACCIDENT ASSISTANCE' :
+                        appointmentType === 'immediate' ? 'Immediate Assistance' :
+                            appointmentType === 'videocall' || appointmentType === 'video' ? 'Video Call Assistance' :
+                                'Scheduled Assistance'}
                 </Text>
             </View>
 

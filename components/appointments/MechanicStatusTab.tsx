@@ -39,9 +39,10 @@ export function MechanicStatusTab({
                     <Ionicons name="construct" size={24} color="white" />
                 </View>
                 <Text className="text-white font-outfit-bold text-lg">
-                    {appointment.type === 'immediate' ? 'Immediate Assistance' :
-                        appointment.type === 'videocall' || appointment.type === 'video' ? 'Video Call Assistance' :
-                            'Scheduled Assistance'}
+                    {appointment.assistanceType === 'witness' ? 'ACCIDENT ASSISTANCE' :
+                        appointment.type === 'immediate' ? 'Immediate Assistance' :
+                            appointment.type === 'videocall' || appointment.type === 'video' ? 'Video Call Assistance' :
+                                'Scheduled Assistance'}
                 </Text>
             </View>
 

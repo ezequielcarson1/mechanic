@@ -68,9 +68,10 @@ export default function MechanicFoundScreen() {
 
     // Derive type label and icon from the request
     const typeLabel =
-        assistanceRequest?.type === 'immediate' ? 'IMMEDIATE ASSISTANCE' :
-            assistanceRequest?.type === 'video' ? 'VIDEO CALL ASSISTANCE' :
-                'SCHEDULED ASSISTANCE';
+        assistanceRequest?.assistanceType === 'witness' ? 'ACCIDENT ASSISTANCE' :
+            assistanceRequest?.type === 'immediate' ? 'IMMEDIATE ASSISTANCE' :
+                assistanceRequest?.type === 'video' ? 'VIDEO CALL ASSISTANCE' :
+                    'SCHEDULED ASSISTANCE';
 
     const typeIcon: any =
         assistanceRequest?.type === 'immediate' ? 'construct-outline' :

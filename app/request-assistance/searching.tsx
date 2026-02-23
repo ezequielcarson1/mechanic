@@ -22,7 +22,24 @@ export default function SearchingScreen() {
                 useNativeDriver: true,
             })
         ).start();
-    }, []);
+
+        // Fallback: check current status once on mount
+        const checkCurrentStatus = async () => {
+            if (!requestId) return;
+            try {
+                const data = await assistanceDAO.getById(requestId as string);
+                if (data && data.status === 'offered') {
+                    router.replace({
+                        pathname: '/request-assistance/mechanic-found',
+                        params: { requestId: requestId as string }
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to check status on search mount:', error);
+            }
+        };
+        checkCurrentStatus();
+    }, [requestId]);
 
     // Real-time listener for status updates
     useEffect(() => {

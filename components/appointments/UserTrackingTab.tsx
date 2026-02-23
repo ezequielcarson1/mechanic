@@ -9,7 +9,8 @@ interface UserTrackingTabProps {
     appointment?: any;
 }
 
-function getTypeLabel(type?: string) {
+function getTypeLabel(type?: string, assistanceType?: string) {
+    if (assistanceType === 'witness' || type === 'witness') return 'ACCIDENT ASSISTANCE';
     if (type === 'immediate') return 'Immediate Assistance';
     if (type === 'videocall' || type === 'video') return 'Video Call Assistance';
     return 'Scheduled Assistance';
@@ -32,7 +33,7 @@ export function UserTrackingTab({ onCancel, mechanic, appointmentType, appointme
                     <Ionicons name="construct" size={22} color="white" />
                 </View>
                 <Text style={{ color: 'white', fontFamily: 'Outfit_700Bold', fontSize: 17 }}>
-                    {getTypeLabel(appointmentType)}
+                    {getTypeLabel(appointmentType, appointment?.assistanceType)}
                 </Text>
             </View>
 

@@ -2,14 +2,14 @@ const db = require('../db');
 
 class AssistanceDAO {
     static create(data) {
-        const { id, type, title, car, address, notes, budget, distance, date, userId, status, locationLat, locationLng, photos, vehicleId, zip } = data;
+        const { id, type, title, car, address, notes, budget, distance, date, userId, status, locationLat, locationLng, photos, vehicleId, zip, assistanceType } = data;
         const newId = id || crypto.randomUUID();
 
         return new Promise((resolve, reject) => {
             const sql = `INSERT INTO assistance_requests (
                 id, type, title, car, address, notes, budget, distance, date, userId, mechanicId, status, 
-                locationLat, locationLng, photos, vehicleId, zip
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                locationLat, locationLng, photos, vehicleId, zip, assistanceType
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             db.run(sql, [
                 newId,
@@ -28,7 +28,8 @@ class AssistanceDAO {
                 locationLng,
                 photos ? JSON.stringify(photos) : '[]',
                 vehicleId,
-                zip
+                zip,
+                assistanceType || type
             ], function (err) {
                 if (err) reject(err);
                 else resolve({ id: newId, ...data });

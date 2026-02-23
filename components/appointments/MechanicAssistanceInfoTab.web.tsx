@@ -80,7 +80,12 @@ export function MechanicAssistanceInfoTab({ appointment, onScan }: MechanicAssis
                 <View className="bg-white/20 p-2 rounded-full">
                     <Ionicons name="construct" size={24} color="white" />
                 </View>
-                <Text className="text-white font-outfit-bold text-lg">Immediate Assistance</Text>
+                <Text className="text-white font-outfit-bold text-lg">
+                    {appointment.assistanceType === 'witness' ? 'ACCIDENT ASSISTANCE' :
+                        appointment.type === 'immediate' ? 'Immediate Assistance' :
+                            appointment.type === 'videocall' || appointment.type === 'video' ? 'Video Call Assistance' :
+                                'Scheduled Assistance'}
+                </Text>
             </View>
 
             {/* Assistance Details */}

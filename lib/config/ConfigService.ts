@@ -19,8 +19,8 @@ const DEFAULT_FALLBACK_CONFIG: BootstrapConfig = {
             wsUrl: 'ws://20.124.131.193:3000',
         },
         dev: {
-            apiBaseUrl: 'http://localhost:3000',
-            wsUrl: 'ws://localhost:3000',
+            apiBaseUrl: 'http://192.168.1.229:30000',
+            wsUrl: 'ws://192.168.1.229:30000',
         },
     },
 };

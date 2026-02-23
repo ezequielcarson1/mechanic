@@ -1,6 +1,6 @@
 import { Appointment } from '@/context/AppointmentsContext';
 import { useRouter } from 'expo-router';
-import { Calendar, Car, Clock, MapPin, MessageSquare, Trash2, Video } from 'lucide-react-native';
+import { Calendar, Car, Clock, MapPin, MessageSquare, ShieldCheck, Trash2, Video } from 'lucide-react-native';
 import { Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
@@ -15,19 +15,42 @@ export function AppointmentCard({ appointment, onCancel }: AppointmentCardProps)
     const isPending = appointment.status === 'pending';
 
     const getHeaderStyles = () => {
+        const isAccepted = appointment.status === 'accepted';
+
         if (isPending) {
             return { bg: 'bg-orange-500', icon: Clock, label: 'Pending Request' };
         }
+
+        if (appointment.assistanceType === 'witness' || appointment.type === 'witness') {
+            return {
+                bg: isAccepted ? 'bg-emerald-600' : 'bg-blue-700',
+                icon: ShieldCheck,
+                label: isAccepted ? 'Accepted Accident' : 'ACCIDENT ASSISTANCE'
+            };
+        }
+
         switch (appointment.type) {
             case 'immediate':
-                return { bg: 'bg-blue-700', icon: Clock, label: 'Immediate Assistance' };
+                return {
+                    bg: isAccepted ? 'bg-emerald-600' : 'bg-blue-700',
+                    icon: Clock,
+                    label: isAccepted ? 'Accepted Assistance' : 'Immediate Assistance'
+                };
             case 'videocall':
-                return { bg: 'bg-cyan-600', icon: Video, label: 'Video Call Assistance' };
+                return {
+                    bg: isAccepted ? 'bg-emerald-600' : 'bg-cyan-600',
+                    icon: Video,
+                    label: isAccepted ? 'Accepted Video Call' : 'Video Call Assistance'
+                };
             default:
                 if (appointment.status === 'offered') {
                     return { bg: 'bg-blue-600', icon: Clock, label: 'Mechanic Found' };
                 }
-                return { bg: appointment.status === 'accepted' ? 'bg-emerald-600' : 'bg-blue-600', icon: Calendar, label: appointment.status === 'accepted' ? 'Accepted Appointment' : 'Scheduled Assistance' };
+                return {
+                    bg: isAccepted ? 'bg-emerald-600' : 'bg-blue-600',
+                    icon: Calendar,
+                    label: isAccepted ? 'Accepted Appointment' : 'Scheduled Assistance'
+                };
         }
     };
 

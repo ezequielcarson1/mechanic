@@ -23,7 +23,8 @@ export interface ClientReview {
 
 export interface Appointment {
     id: string;
-    type: 'immediate' | 'scheduled' | 'videocall';
+    type: 'immediate' | 'scheduled' | 'videocall' | 'witness';
+    assistanceType?: string;
     title: string;
     date: string;
     time: string;
@@ -93,6 +94,7 @@ export function AppointmentsProvider({ children }: { children: ReactNode }) {
                 .map((req: AssistanceRequest) => ({
                     id: req.id,
                     type: req.type,
+                    assistanceType: req.assistanceType,
                     title: req.title,
                     date: req.date || 'Pending',
                     time: 'Pending',

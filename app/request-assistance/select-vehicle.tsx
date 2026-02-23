@@ -48,6 +48,7 @@ export default function SelectVehicleScreen() {
             case 'immediate': return 'Immediate Assistance';
             case 'scheduled': return 'Scheduled Assistance';
             case 'videocall': return 'Video Call Assistance';
+            case 'witness': return 'Accident Assistance';
             default: return 'Assistance';
         }
     };

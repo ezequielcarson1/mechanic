@@ -191,6 +191,7 @@ export default function AppointmentDetailScreen() {
                     <MechanicClientInfoTab
                         client={client}
                         appointmentType={appointment.type}
+                        assistanceType={appointment.assistanceType}
                         rating={rating}
                         setRating={setRating}
                         selectedOption={selectedOption}

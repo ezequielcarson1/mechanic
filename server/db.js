@@ -136,7 +136,9 @@ db.serialize(() => {
     'ALTER TABLE assistance_requests ADD COLUMN photos TEXT',
     'ALTER TABLE assistance_requests ADD COLUMN vehicleId TEXT',
     'ALTER TABLE assistance_requests ADD COLUMN zip TEXT',
+    'ALTER TABLE assistance_requests ADD COLUMN assistanceType TEXT DEFAULT "immediate"',
     'ALTER TABLE appointments ADD COLUMN zip TEXT',
+    'ALTER TABLE appointments ADD COLUMN assistanceType TEXT DEFAULT "immediate"',
     'ALTER TABLE users ADD COLUMN isOnline INTEGER DEFAULT 0'
   ];
 
@@ -168,6 +170,7 @@ db.serialize(() => {
     userId TEXT,
     mechanicId TEXT,
     zip TEXT,
+    assistanceType TEXT,
     FOREIGN KEY(userId) REFERENCES users(id),
     FOREIGN KEY(mechanicId) REFERENCES users(id)
   )`);
