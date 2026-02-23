@@ -100,7 +100,11 @@ export default function IssueSelectionScreen() {
                     </View>
                 </View>
 
-                <Button onPress={handleContinue} className="bg-blue-700 rounded-xl mb-8">
+                <Button
+                    onPress={handleContinue}
+                    className={`rounded-xl mb-8 ${selectedIssues.length === 0 ? 'bg-slate-200' : 'bg-blue-700'}`}
+                    disabled={selectedIssues.length === 0}
+                >
                     Continue
                 </Button>
             </ScrollView>

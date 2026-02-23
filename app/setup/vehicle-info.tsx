@@ -1,10 +1,11 @@
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { saveSetupProgress } from '@/lib/storage';
+import { MakeType, VEHICLE_COLORS, VEHICLE_DATA, decodeVin } from '@/lib/vehicle';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Vehicle {
     id: string;
@@ -16,26 +17,12 @@ interface Vehicle {
     details: string;
 }
 
-const VEHICLE_DATA = {
-    'Toyota': ['Corolla', 'Camry', 'RAV4', 'Prius', 'Tacoma', 'Highlander', '4Runner', 'Sienna'],
-    'Honda': ['Civic', 'Accord', 'CR-V', 'Pilot', 'Odyssey', 'Ridgeline', 'Fit', 'HR-V'],
-    'Ford': ['F-150', 'Mustang', 'Explorer', 'Escape', 'Focus', 'Fusion', 'Edge', 'Ranger'],
-    'Chevrolet': ['Silverado', 'Malibu', 'Equinox', 'Corvette', 'Tahoe', 'Suburban', 'Cruze', 'Camaro'],
-    'Nissan': ['Altima', 'Sentra', 'Rogue', 'Pathfinder', 'Titan', 'Murano', 'Versa', 'Maxima'],
-    'BMW': ['3 Series', '5 Series', 'X3', 'X5', 'M3', 'M5', 'i3', 'i8'],
-    'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class', 'GLC', 'GLE', 'CLA', 'GLA', 'A-Class'],
-    'Audi': ['A3', 'A4', 'A6', 'Q3', 'Q5', 'Q7', 'Q8', 'TT'],
-    'Tesla': ['Model 3', 'Model S', 'Model X', 'Model Y', 'Cybertruck'],
-    'Volkswagen': ['Jetta', 'Passat', 'Golf', 'Tiguan', 'Atlas', 'Beetle', 'ID.4']
-} as const;
-
-type MakeType = keyof typeof VEHICLE_DATA;
-
 export default function VehicleInfoScreen() {
     const router = useRouter();
     const [isAdding, setIsAdding] = useState(true);
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [activeModal, setActiveModal] = useState<'make' | 'model' | null>(null);
+    const [isVinSearching, setIsVinSearching] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -55,6 +42,38 @@ export default function VehicleInfoScreen() {
     const handleSelectModel = (model: string) => {
         setFormData(prev => ({ ...prev, model }));
         setActiveModal(null);
+    };
+
+    const handleVinLookup = async () => {
+        const vin = formData.vin.trim();
+        if (vin.length !== 17) {
+            Alert.alert('Invalid VIN', 'A VIN must be exactly 17 characters.');
+            return;
+        }
+
+        setIsVinSearching(true);
+        try {
+            await decodeVin(
+                vin,
+                (make, model) => {
+                    setFormData(prev => ({
+                        ...prev,
+                        make,
+                        model,
+                    }));
+                    Alert.alert(
+                        'VIN Decoded',
+                        `Found: ${make} ${model}`,
+                        [{ text: 'OK' }]
+                    );
+                },
+                (errorMsg) => {
+                    Alert.alert('VIN Not Found', errorMsg);
+                }
+            );
+        } finally {
+            setIsVinSearching(false);
+        }
     };
 
     const handleAddVehicle = () => {
@@ -186,11 +205,34 @@ export default function VehicleInfoScreen() {
 
                 <View>
                     <Text className="font-outfit-medium text-[#0F172A] mb-2">Color</Text>
-                    <Input
-                        value={formData.color}
-                        onChangeText={(text) => setFormData(p => ({ ...p, color: text }))}
-                        containerClassName="bg-blue-50/50 border-0 h-12"
-                    />
+                    <View className="flex-row gap-3">
+                        {VEHICLE_COLORS.map((c) => {
+                            const isSelected = formData.color === c.name;
+                            return (
+                                <TouchableOpacity
+                                    key={c.name}
+                                    onPress={() => setFormData(p => ({ ...p, color: c.name }))}
+                                    style={{
+                                        width: 48,
+                                        height: 48,
+                                        borderRadius: 12,
+                                        backgroundColor: c.hex,
+                                        borderWidth: isSelected ? 3 : 1,
+                                        borderColor: isSelected ? '#0047AB' : c.border,
+                                    }}
+                                >
+                                    {isSelected && (
+                                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                                            <Ionicons name="checkmark" size={24} color={c.name === 'White' ? '#0047AB' : '#FFFFFF'} />
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                    {formData.color ? (
+                        <Text className="text-xs font-outfit-medium text-blue-600 mt-2">{formData.color}</Text>
+                    ) : null}
                 </View>
 
                 <View>
@@ -204,11 +246,39 @@ export default function VehicleInfoScreen() {
 
                 <View>
                     <Text className="font-outfit-medium text-[#0F172A] mb-2">VIN #</Text>
-                    <Input
-                        value={formData.vin}
-                        onChangeText={(text) => setFormData(p => ({ ...p, vin: text }))}
-                        containerClassName="bg-blue-50/50 border-0 h-12"
-                    />
+                    <View className="flex-row items-center gap-2">
+                        <View className="flex-1">
+                            <Input
+                                value={formData.vin}
+                                onChangeText={(text) => setFormData(p => ({ ...p, vin: text.toUpperCase() }))}
+                                containerClassName="bg-blue-50/50 border-0 h-12"
+                                maxLength={17}
+                                autoCapitalize="characters"
+                                placeholder="Enter 17-character VIN"
+                            />
+                        </View>
+                        <TouchableOpacity
+                            onPress={handleVinLookup}
+                            disabled={isVinSearching || formData.vin.trim().length !== 17}
+                            style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: 12,
+                                backgroundColor: formData.vin.trim().length === 17 ? '#0047AB' : '#CBD5E1',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            {isVinSearching ? (
+                                <ActivityIndicator size="small" color="white" />
+                            ) : (
+                                <Ionicons name="search" size={22} color="white" />
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                    <Text className="text-xs font-outfit-regular text-slate-400 mt-1">
+                        Enter VIN and tap search to auto-fill Make & Model
+                    </Text>
                 </View>
 
                 <View>
@@ -269,7 +339,7 @@ export default function VehicleInfoScreen() {
                                     </TouchableOpacity>
                                 ))
                             ) : (
-                                formData.make !== 'Select' && VEHICLE_DATA[formData.make as MakeType].map(model => (
+                                formData.make !== 'Select' && (VEHICLE_DATA[formData.make as MakeType] || []).map(model => (
                                     <TouchableOpacity
                                         key={model}
                                         className="py-4 border-b border-slate-50"
