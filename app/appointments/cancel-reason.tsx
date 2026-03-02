@@ -1,4 +1,5 @@
 import { useAppointments } from '@/context/AppointmentsContext';
+import { useSocket } from '@/context/SocketContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -15,11 +16,14 @@ export default function CancelReasonScreen() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
     const { cancelAppointment } = useAppointments();
+    const { clearChatHistory } = useSocket();
     const [selectedReason, setSelectedReason] = useState<string | null>(null);
 
     const handleDone = async () => {
         if (selectedReason && id) {
-            await cancelAppointment(Array.isArray(id) ? id[0] : id, selectedReason);
+            const appointmentId = Array.isArray(id) ? id[0] : id;
+            await cancelAppointment(appointmentId, selectedReason);
+            clearChatHistory(appointmentId);
             router.navigate('/(tabs)/appointments');
         }
     };

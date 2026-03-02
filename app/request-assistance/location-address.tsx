@@ -18,10 +18,17 @@ export default function LocationAddressScreen() {
 
         setIsSearching(true);
         try {
-            // Using Photon API directly as in previous tasks
-            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(text)}&limit=5`);
+            // Bias the search with ", FL" and increase limit to get more candidates for local filtering
+            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(text + ", FL")}&limit=10`);
             const data = await response.json();
-            setResults(data.features || []);
+
+            // Filter results to only include Florida
+            const flResults = (data.features || []).filter((f: any) => {
+                const state = f.properties?.state?.toLowerCase();
+                return state === 'florida' || state === 'fl';
+            });
+
+            setResults(flResults.slice(0, 5)); // Show top 5 FL results
         } catch (error) {
             console.error(error);
         } finally {

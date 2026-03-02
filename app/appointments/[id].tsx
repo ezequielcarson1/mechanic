@@ -171,7 +171,15 @@ export default function AppointmentDetailScreen() {
         if (isUserRole) {
             switch (activeTab) {
                 case 'info':
-                    return <UserTrackingTab onCancel={() => setShowCancelModal(true)} mechanic={mechanic} appointmentType={appointment.type} appointment={appointment} />;
+                    return (
+                        <UserTrackingTab
+                            onCancel={() => setShowCancelModal(true)}
+                            onMessage={() => router.push(`/chat/${appointment.id}`)}
+                            mechanic={mechanic}
+                            appointmentType={appointment.type}
+                            appointment={appointment}
+                        />
+                    );
                 case 'client':
                     return <UserMechanicInfoTab mechanic={mechanic} />;
                 case 'status':
@@ -210,6 +218,7 @@ export default function AppointmentDetailScreen() {
                                 }
                             });
                         }}
+                        onMessage={() => router.push(`/chat/${appointment.id}`)}
                     />
                 );
             case 'status':

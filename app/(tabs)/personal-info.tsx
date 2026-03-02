@@ -79,10 +79,17 @@ export default function PersonalInfoScreen() {
 
         setIsSearching(true);
         try {
-            // Photon API is good for free/simulation of Google
-            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`);
+            // Bias the search with ", FL" and increase limit to get more candidates for local filtering
+            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query + ", FL")}&limit=10&lang=en`);
             const data = await response.json();
-            setSearchSuggestions(data.features || []);
+
+            // Filter results to only include Florida
+            const flResults = (data.features || []).filter((f: any) => {
+                const state = f.properties?.state?.toLowerCase();
+                return state === 'florida' || state === 'fl';
+            });
+
+            setSearchSuggestions(flResults.slice(0, 5)); // Show top 5 FL results
         } catch (error) {
             console.error('Search failed:', error);
         } finally {

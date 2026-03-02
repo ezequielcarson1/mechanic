@@ -14,6 +14,7 @@ interface MechanicClientInfoTabProps {
     setReviewText: (text: string) => void;
     isSubmitted: boolean;
     onSubmit: () => void;
+    onMessage?: () => void;
 }
 
 export function MechanicClientInfoTab({
@@ -27,7 +28,8 @@ export function MechanicClientInfoTab({
     reviewText,
     setReviewText,
     isSubmitted,
-    onSubmit
+    onSubmit,
+    onMessage
 }: MechanicClientInfoTabProps) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const options = [
@@ -74,7 +76,10 @@ export function MechanicClientInfoTab({
                     <Ionicons name="call" size={20} color="white" />
                     <Text className="text-white font-outfit-bold text-base">Call</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className="bg-blue-600 w-full py-3 rounded-lg flex-row items-center justify-center gap-2">
+                <TouchableOpacity
+                    className="bg-blue-600 w-full py-3 rounded-lg flex-row items-center justify-center gap-2"
+                    onPress={onMessage}
+                >
                     <Ionicons name="chatbubble-ellipses" size={20} color="white" />
                     <Text className="text-white font-outfit-bold text-base">Message</Text>
                 </TouchableOpacity>

@@ -9,7 +9,7 @@ export default function SearchingScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const { requestId } = params;
-    const { lastMessage } = useSocket();
+    const { lastMessage, clearChatHistory } = useSocket();
 
     const [spinValue] = useState(new Animated.Value(0));
 
@@ -65,9 +65,19 @@ export default function SearchingScreen() {
         outputRange: ['0deg', '360deg'],
     });
 
-    const handleCancel = () => {
-        alert('Assistance search cancelled.');
-        router.replace('/(tabs)/assist');
+    const handleCancel = async () => {
+        if (requestId) {
+            try {
+                // Also update the backend status to 'canceled'
+                await assistanceDAO.updateStatus(requestId as string, '', 'canceled');
+                clearChatHistory(requestId as string);
+                alert('Assistance search cancelled.');
+                router.replace('/(tabs)/assist');
+            } catch (error) {
+                console.error('Failed to cancel request:', error);
+                alert('Error cancelling request. Please try again.');
+            }
+        }
     };
 
     const handleBackToMenu = () => {

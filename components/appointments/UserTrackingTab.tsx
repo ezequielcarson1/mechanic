@@ -4,6 +4,7 @@ import { ActivityIndicator, Image, Text, TouchableOpacity, View } from 'react-na
 
 interface UserTrackingTabProps {
     onCancel: () => void;
+    onMessage?: () => void;
     mechanic?: any;
     appointmentType?: string;
     appointment?: any;
@@ -16,7 +17,7 @@ function getTypeLabel(type?: string, assistanceType?: string) {
     return 'Scheduled Assistance';
 }
 
-export function UserTrackingTab({ onCancel, mechanic, appointmentType, appointment }: UserTrackingTabProps) {
+export function UserTrackingTab({ onCancel, onMessage, mechanic, appointmentType, appointment }: UserTrackingTabProps) {
     return (
         <View style={{ gap: 20 }}>
 
@@ -150,15 +151,18 @@ export function UserTrackingTab({ onCancel, mechanic, appointmentType, appointme
                     <Text style={{ color: 'white', fontFamily: 'Outfit_700Bold', fontSize: 16 }}>Call</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={{
-                    backgroundColor: '#2563EB',
-                    borderRadius: 10,
-                    paddingVertical: 14,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                }}>
+                <TouchableOpacity
+                    onPress={onMessage}
+                    style={{
+                        backgroundColor: '#2563EB',
+                        borderRadius: 10,
+                        paddingVertical: 14,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                    }}
+                >
                     <Ionicons name="chatbubble-ellipses" size={20} color="white" />
                     <Text style={{ color: 'white', fontFamily: 'Outfit_700Bold', fontSize: 16 }}>Message</Text>
                 </TouchableOpacity>

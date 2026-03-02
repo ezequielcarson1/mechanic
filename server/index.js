@@ -35,6 +35,18 @@ wss.on('connection', (ws) => {
                 ws.userId = data.userId;
                 logMessage('INFO', `Registered user: ${data.userId}`);
             }
+
+            // Relay chat messages
+            if (data.type === 'chat_message' && data.recipientId) {
+                console.log(`[CHAT_DEBUG] Received message from ${data.senderId} for ${data.recipientId}: "${data.text?.substring(0, 20)}..."`);
+                logMessage('INFO', `Relaying chat message from ${data.senderId} to ${data.recipientId}`);
+                notifyUser(data.recipientId, 'chat_message', {
+                    senderId: data.senderId,
+                    conversationId: data.conversationId,
+                    text: data.text,
+                    timestamp: new Date().toISOString()
+                });
+            }
         } catch (e) {
             console.error('Failed to parse message', e);
         }
