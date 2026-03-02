@@ -165,9 +165,12 @@ export default function LocationMapScreen() {
                 <TouchableOpacity onPress={() => router.back()} className="mr-4">
                     <ChevronLeft size={24} color="#0F172A" />
                 </TouchableOpacity>
-                <Text className="text-xl font-outfit-bold text-[#0F172A] flex-1 text-center mr-8">
+                <Text className="text-xl font-outfit-bold text-[#0F172A] flex-1 text-center">
                     Assistance
                 </Text>
+                <TouchableOpacity onPress={() => router.replace('/(tabs)/assist')} className="ml-4">
+                    <Text className="text-red-500 font-outfit-medium text-xs">Cancel</Text>
+                </TouchableOpacity>
             </View>
             <View className="px-6 pb-2 pb-4">
                 <Text className="text-blue-600 font-outfit-bold text-lg text-center">

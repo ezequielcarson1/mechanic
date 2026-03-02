@@ -48,10 +48,18 @@ export default function MechanicFoundScreen() {
             await refresh();
             setIsConfirmed(true);
 
-            router.replace({
-                pathname: '/appointments/[id]',
-                params: { id: requestId as string }
-            });
+            // For videocall type, redirect to video lobby instead of appointment detail
+            if (assistanceRequest?.type === 'videocall' || assistanceRequest?.type === 'video') {
+                router.replace({
+                    pathname: '/video-lobby/[id]' as any,
+                    params: { id: requestId as string }
+                });
+            } else {
+                router.replace({
+                    pathname: '/appointments/[id]',
+                    params: { id: requestId as string }
+                });
+            }
         } catch (error) {
             console.error('Failed to confirm appointment:', error);
             Alert.alert('Error', 'Failed to confirm the appointment. Please try again.');

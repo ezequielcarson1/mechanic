@@ -6,7 +6,7 @@ This document provides a detailed explanation of every screen in the Mechanic ap
 
 - **Root Redirect (`app/index.tsx`)**: The entry point that handles initial routing logic, typically redirecting users to onboarding or the main app based on authentication state.
 - **Onboarding (`app/onboarding.tsx`)**: A carousel-based introduction for new users, highlighting key features like professional services, immediate assistance, and video calls.
-- **Login (`app/login.tsx`)**: Unified authentication screen. Supports smart phone formatting `(000) 000-0000` and validation. Dummy credentials: `+1 1` (Mechanic), `+1 2` (User).
+- **Login (`app/login.tsx`)**: Unified authentication screen. Supports smart phone formatting `(000) 000-0000` and validation. Dummy credentials: `(718) 871-2281` (Mechanic), `(555) 010-1234` (User).
 
 ## 🛠️ Registration & Setup Flow
 
@@ -39,7 +39,19 @@ The core experience for logged-in users, managed via a bottom tab navigator.
     - **Client Info**: Payer details, contact options, and rating system.
     - **Assist Status**: Timeline and status updates (Arrived, Delayed, Completed).
     - **Budget**: Financial breakdown and payment request triggers.
+    - **Video Call Button**: For `videocall`-type appointments, a green "Start Video Chat" / "Join Video Call" button navigates to the Video Lobby.
 - **Cancel Reason (`app/appointments/cancel-reason.tsx`)**: A structured feedback screen for mechanics when they need to cancel an accepted appointment.
+
+### 📹 Video Call Assistance
+- **Video Lobby (`app/video-lobby/[id].tsx`)**: Entry point for video calls. Displays appointment info, the other party's name, and a **pulsing green circle** animation:
+    - **User** sees "Start Video Chat" — tapping creates a Daily.co room via `POST /api/video-room` and navigates to the call.
+    - **Mechanic** sees "Join Video Call" — waits for room via WebSocket notification + 3-second polling fallback, then taps to join.
+    - Shows room active status indicator and 5-minute expiry notice.
+- **Video Call (`app/video-call/[id].tsx`)**: Full-screen WebView embedding the Daily.co room. Features a countdown timer (turns red in last 60s), loading/error states with retry, and a "Leave Call" button. Dark theme UI.
+
+### 🔄 Request Assistance Flow
+- **Mechanic Found (`app/request-assistance/mechanic-found.tsx`)**: Displayed after a mechanic is matched. For `videocall`-type requests, confirms and redirects to the Video Lobby instead of the appointment detail.
+- **Confirmation (`app/request-assistance/confirmation.tsx`)**: Pre-submission review of assistance request details.
 
 ### 💬 Communication & Support
 - **Messaging (`app/chat/[id].tsx`)**: Real-time chat interface to communicate directly with clients regarding their specific job requests.

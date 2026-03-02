@@ -11,7 +11,9 @@
     "lint": "expo lint",
     "backup": "tar --exclude='./node_modules' --exclude='./server/node_modules' --exclude='./admin-portal/node_modules' --exclude='./admin-portal/.next' --exclude='./admin-portal/out' --exclude='./admin-portal/dist' --exclude='./.git' --exclude='./.expo' --exclude='./.DS_Store' --exclude='./assets' -czf \"$HOME/Downloads/Mechanic_backup_$(date +%Y-%m-%d_%H-%M-%S).tar.gz\" .",
     "upload": "bash ./scripts/upload.sh",
-    "local": "docker build -t mechanic-server:latest ./server && docker build -t mechanic-admin-portal:latest ./admin-portal && kubectl rollout restart deployment mechanic-server -n mechanic && kubectl rollout restart deployment mechanic-admin -n mechanic"
+    "vpn": "echo '🔌 Opening SSH tunnel to Azure Minikube K8s API (localhost:8443 → remote:32776)...' && echo '   Press Ctrl+C to disconnect.' && ssh -N -L 8443:127.0.0.1:32776 usuarioifx1@20.124.131.193",
+    "local": "docker build -t mechanic-server:latest ./server && docker build -t mechanic-admin-portal:latest ./admin-portal && kubectl rollout restart deployment mechanic-server -n mechanic && kubectl rollout restart deployment mechanic-admin -n mechanic",
+    "testflight": "eas build --platform ios --profile production --non-interactive && eas submit --platform ios --profile production --non-interactive"
   },
   "dependencies": {
     "@expo-google-fonts/outfit": "^0.4.3",
@@ -55,6 +57,7 @@
     "react-native-svg": "15.12.1",
     "react-native-url-polyfill": "^3.0.0",
     "react-native-web": "~0.21.0",
+    "react-native-webview": "^13.16.1",
     "react-native-worklets": "0.5.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^3.4.19"

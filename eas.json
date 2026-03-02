@@ -17,6 +17,11 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "ezequiel_carson@hotmail.com",
+        "appleTeamId": "B93N4Z95KG"
+      }
+    }
   }
 }

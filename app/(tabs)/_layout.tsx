@@ -2,10 +2,42 @@ import { useUser } from '@/context/UserContext';
 import { Tabs, useNavigation, useRouter } from 'expo-router';
 import { Bell, Calendar, ChevronLeft, LifeBuoy, User as UserIcon } from 'lucide-react-native';
 import React from 'react';
-import { Image, Platform, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, Text, TouchableOpacity, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+function UserHeaderRight() {
+  const router = useRouter();
+  const { user } = useUser();
+
+  return (
+    <TouchableOpacity
+      onPress={() => router.push('/(tabs)')}
+      style={{ marginRight: 16 }}
+      className="flex-row items-center"
+    >
+      <View className="items-end mr-2">
+        <Text className="text-[11px] font-outfit-bold text-[#0F172A]" numberOfLines={1}>
+          {user?.name} {user?.surname}
+        </Text>
+        <View className="flex-row items-center">
+          <Text className="text-[9px] font-outfit-medium text-blue-600 capitalize">{user?.role}</Text>
+          {user?.address?.zip ? (
+            <Text className="text-[9px] font-outfit-regular text-gray-400 ml-1">• {user.address.zip}</Text>
+          ) : null}
+        </View>
+      </View>
+      <View className="w-8 h-8 rounded-full bg-blue-50 justify-center items-center border border-blue-100 overflow-hidden">
+        {user?.profileImage ? (
+          <Image source={{ uri: user.profileImage }} className="w-full h-full" />
+        ) : (
+          <UserIcon size={20} color="#0047AB" />
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -46,6 +78,7 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color }) => <UserIcon size={24} color={color} />,
           headerLeft: () => null, // Hide back button on root tab
+          headerRight: () => <UserHeaderRight />,
         }}
       />
       <Tabs.Screen
@@ -54,20 +87,7 @@ export default function TabLayout() {
           title: 'Assist',
           tabBarIcon: ({ color }) => <LifeBuoy size={24} color={color} />,
           headerLeft: () => null,
-          headerRight: () => (
-            <TouchableOpacity
-              style={{ marginRight: 16 }}
-              onPress={() => router.push('/(tabs)')}
-            >
-              <View className="w-8 h-8 rounded-full bg-blue-50 justify-center items-center border border-blue-100 overflow-hidden">
-                {user?.profileImage ? (
-                  <Image source={{ uri: user.profileImage }} className="w-full h-full" />
-                ) : (
-                  <UserIcon size={20} color="#0047AB" />
-                )}
-              </View>
-            </TouchableOpacity>
-          ),
+          headerRight: () => <UserHeaderRight />,
         }}
       />
       <Tabs.Screen
@@ -76,6 +96,7 @@ export default function TabLayout() {
           title: 'Appointments',
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
           headerLeft: () => null,
+          headerRight: () => <UserHeaderRight />,
         }}
       />
       <Tabs.Screen

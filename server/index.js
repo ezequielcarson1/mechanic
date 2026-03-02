@@ -265,6 +265,158 @@ app.delete('/api/appointments/:id', async (req, res) => {
     }
 });
 
+// ================== Daily.co Video Room Routes ==================
+const DAILY_API_KEY = '7474b4512937a965a2f3d2e9861da062706161381786fb356c6fb12fbabad50c';
+const DAILY_API_URL = 'https://api.daily.co/v1';
+
+// Create a video room for an appointment
+app.post('/api/video-room', async (req, res) => {
+    try {
+        const { appointmentId } = req.body;
+        if (!appointmentId) {
+            return res.status(400).json({ error: 'appointmentId is required' });
+        }
+
+        // Check if appointment exists
+        let appointment = await AppointmentDAO.getById(appointmentId);
+        let isAssistanceRequest = false;
+        if (!appointment) {
+            // Also check assistance_requests table
+            appointment = await AssistanceDAO.getById(appointmentId);
+            isAssistanceRequest = true;
+        }
+        if (!appointment) {
+            return res.status(404).json({ error: 'Appointment not found' });
+        }
+
+        // If a room already exists and hasn't expired, return it
+        if (appointment.videoRoomUrl) {
+            const roomExpiry = appointment.videoRoomExpiry ? Number(appointment.videoRoomExpiry) : 0;
+            if (roomExpiry > Math.floor(Date.now() / 1000)) {
+                logMessage('INFO', `Returning existing video room for appointment ${appointmentId}`);
+                return res.json({
+                    roomUrl: appointment.videoRoomUrl,
+                    roomName: appointment.videoRoomName,
+                    expiry: roomExpiry
+                });
+            }
+        }
+
+        // Create a new Daily.co room with 5-minute expiry
+        const roomName = `mechanic-${appointmentId.substring(0, 8)}-${Date.now()}`;
+        const expiry = Math.floor(Date.now() / 1000) + (5 * 60); // 5 minutes from now
+
+        const dailyResponse = await fetch(`${DAILY_API_URL}/rooms`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${DAILY_API_KEY}`
+            },
+            body: JSON.stringify({
+                name: roomName,
+                properties: {
+                    exp: expiry,
+                    enable_chat: true,
+                    enable_screenshare: false,
+                    enable_knocking: false,
+                    start_video_off: false,
+                    start_audio_off: false
+                }
+            })
+        });
+
+        if (!dailyResponse.ok) {
+            const errorData = await dailyResponse.json().catch(() => ({}));
+            logMessage('ERROR', 'Daily.co room creation failed', JSON.stringify(errorData));
+            return res.status(500).json({ error: 'Failed to create video room', details: errorData });
+        }
+
+        const roomData = await dailyResponse.json();
+        logMessage('INFO', `Created Daily.co room: ${roomData.url}`, `Expires: ${new Date(expiry * 1000).toISOString()}`);
+
+        // Store room details on the correct table
+        const roomUpdate = {
+            videoRoomUrl: roomData.url,
+            videoRoomName: roomData.name,
+            videoRoomExpiry: String(expiry)
+        };
+
+        if (isAssistanceRequest) {
+            // AssistanceDAO doesn't have a generic update, use raw SQL
+            const db = require('./db');
+            await new Promise((resolve, reject) => {
+                db.run(
+                    'UPDATE assistance_requests SET videoRoomUrl = ?, videoRoomName = ?, videoRoomExpiry = ? WHERE id = ?',
+                    [roomData.url, roomData.name, String(expiry), appointmentId],
+                    (err) => err ? reject(err) : resolve()
+                );
+            });
+        } else {
+            await AppointmentDAO.update(appointmentId, roomUpdate);
+        }
+
+        // Notify the other participant via WebSocket
+        const targetUserId = appointment.mechanicId || appointment.userId;
+        if (targetUserId) {
+            // Notify mechanic if user created room, or user if mechanic created room
+            if (appointment.mechanicId) {
+                notifyUser(appointment.mechanicId, 'video_room_ready', {
+                    appointmentId,
+                    roomUrl: roomData.url,
+                    roomName: roomData.name,
+                    expiry
+                });
+            }
+            if (appointment.userId) {
+                notifyUser(appointment.userId, 'video_room_ready', {
+                    appointmentId,
+                    roomUrl: roomData.url,
+                    roomName: roomData.name,
+                    expiry
+                });
+            }
+        }
+
+        res.status(201).json({
+            roomUrl: roomData.url,
+            roomName: roomData.name,
+            expiry
+        });
+    } catch (err) {
+        logMessage('ERROR', 'Video room creation error', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get video room info for an appointment
+app.get('/api/video-room/:appointmentId', async (req, res) => {
+    try {
+        let appointment = await AppointmentDAO.getById(req.params.appointmentId);
+        if (!appointment) {
+            appointment = await AssistanceDAO.getById(req.params.appointmentId);
+        }
+        if (!appointment) {
+            return res.status(404).json({ error: 'Appointment not found' });
+        }
+
+        if (!appointment.videoRoomUrl) {
+            return res.status(404).json({ error: 'No video room exists for this appointment' });
+        }
+
+        const roomExpiry = appointment.videoRoomExpiry ? Number(appointment.videoRoomExpiry) : 0;
+        const isExpired = roomExpiry <= Math.floor(Date.now() / 1000);
+
+        res.json({
+            roomUrl: appointment.videoRoomUrl,
+            roomName: appointment.videoRoomName,
+            expiry: roomExpiry,
+            isExpired
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // User Routes
 app.get('/api/users/check-phone/:phone', async (req, res) => {
     try {

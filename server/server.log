@@ -6708,3 +6708,21 @@
 [2026-02-20T16:06:29.251Z] [INFO] GET /api/assistance 
 [2026-02-20T16:06:29.294Z] [INFO] GET /api/appointments 
 [2026-02-20T16:06:29.312Z] [INFO] GET /api/users 
+[2026-03-02T03:06:03.031Z] [INFO] POST /api/login 
+[2026-03-02T03:06:03.105Z] [INFO] GET /api/appointments?mechanicId=60b577d5-305f-423f-b6a2-fb3c13dcead3 
+[2026-03-02T03:06:03.107Z] [INFO] Client connected 
+[2026-03-02T03:06:03.109Z] [INFO] GET /api/assistance?mechanicId=60b577d5-305f-423f-b6a2-fb3c13dcead3 
+[2026-03-02T03:06:03.188Z] [INFO] GET /api/assistance?zip=33327&status=pending 
+[2026-03-02T03:06:03.200Z] [INFO] Registered user: 60b577d5-305f-423f-b6a2-fb3c13dcead3 
+[2026-03-02T03:06:07.337Z] [INFO] Client disconnected: 60b577d5-305f-423f-b6a2-fb3c13dcead3 
+[2026-03-02T03:06:19.042Z] [INFO] POST /api/login 
+[2026-03-02T03:06:26.888Z] [INFO] POST /api/login 
+[2026-03-02T03:06:31.025Z] [INFO] POST /api/login 
+[2026-03-02T03:07:50.809Z] [INFO] POST /api/login 
+[2026-03-02T03:07:50.856Z] [INFO] GET /api/appointments?mechanicId=60b577d5-305f-423f-b6a2-fb3c13dcead3 
+[2026-03-02T03:07:50.857Z] [INFO] Client connected 
+[2026-03-02T03:07:50.859Z] [INFO] GET /api/assistance?mechanicId=60b577d5-305f-423f-b6a2-fb3c13dcead3 
+[2026-03-02T03:07:50.938Z] [INFO] GET /api/assistance?zip=33327&status=pending 
+[2026-03-02T03:07:50.968Z] [INFO] Registered user: 60b577d5-305f-423f-b6a2-fb3c13dcead3 
+[2026-03-02T03:07:54.919Z] [INFO] GET /api/assistance?zip=33327&status=pending 
+[2026-03-02T03:07:57.963Z] [INFO] Client disconnected: 60b577d5-305f-423f-b6a2-fb3c13dcead3 

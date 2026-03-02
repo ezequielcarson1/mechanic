@@ -88,8 +88,8 @@ Roles are defined in the database during registration.
 - **User**: Access to personal vehicle management and assistance requests.
 
 For testing, dummy users are provided with roles pre-assigned:
-- Phone: `+1 1` -> **Mechanic**
-- Phone: `+1 2` -> **User**
+- Phone: `(718) 871-2281` -> **Mechanic** (Shayna Samett)
+- Phone: `(555) 010-1234` -> **User** (John Doe)
 
 ### Feature Toggles
 The UI dynamically adapts based on the user's role:
@@ -107,6 +107,8 @@ The UI dynamically adapts based on the user's role:
 │   ├── (tabs)/           # Tab-based navigation (Assist, Appointments, Chat, Profile)
 │   ├── appointments/     # Appointment-specific screens (Details, Cancellation)
 │   ├── chat/             # Messaging and chat features
+│   ├── video-lobby/      # Video call lobby (Start/Join screens)
+│   ├── video-call/       # WebView-based Daily.co video call
 │   ├── settings/         # User settings and configuration
 │   ├── setup/            # Initial setup and configuration screens
 │   ├── login.tsx         # Authentication screen
@@ -117,19 +119,24 @@ The UI dynamically adapts based on the user's role:
 │   └── ...               # Feature-specific components
 ├── hooks/                # Custom React hooks (Theme, Color Scheme, etc.)
 ├── lib/                  # Utility libraries and external integrations
-│   ├── supabase.ts       # Supabase client configuration
-│   ├── storage.ts        # AsyncStorage wrapper
+│   ├── config/           # ConfigService for PROD/DEV environment management
+│   ├── dao/              # Data Access Objects (UserDAO, AppointmentDAO, etc.)
+│   ├── api/              # Centralized API client
 │   └── utils.ts          # General utility functions
 ├── constants/            # App-wide constants (colors, layout, etc.)
 ├── context/              # React Context Providers for global state
 ├── assets/               # Static assets (images, fonts, etc.)
-└── scripts/              # Utility scripts for development
+├── scripts/              # Utility scripts (upload.sh, etc.)
+├── k8s/                  # Kubernetes manifests for deployment
+└── server/               # Backend Express server with SQLite
 ```
 
 ## ✨ Key Features
 
 - **Mechanical Assistance**: Request and track real-time mechanical help.
+- **Video Call Assistance**: Real-time video calls between users and mechanics via Daily.co WebView integration.
 - **Appointment Management**: Dashboard for upcoming and past jobs.
+- **Real-Time Communication**: WebSocket-based notifications for appointment updates, video room readiness, and more.
 - **Persistent Login**: Secure phone-based authentication with session persistence via `AsyncStorage`.
 - **Certification Tracking**: ASE certification validation for mechanics.
 - **Flexible Status**: Mechanics can toggle availability status.
@@ -146,6 +153,10 @@ The UI dynamically adapts based on the user's role:
 - `npm run android`: Opens the app in the Android emulator.
 - `npm run web`: Opens the app in a web browser.
 - `npm run lint`: Runs ESLint to check for code quality issues.
+- `npm run local`: Builds Docker images locally and restarts Kubernetes pods (Docker Desktop).
+- `npm run upload`: Builds Docker images, uploads them to the Azure VM, loads into remote Minikube, syncs the SQLite DB, and restarts pods.
+- `npm run vpn`: Opens an SSH tunnel (`localhost:8443`) to the Azure VM's Minikube K8s API. Required for remote `kubectl` commands. Keep running in a separate terminal.
+- `npm run backup`: Creates a compressed backup of the project (excluding `node_modules`, `.git`, etc.) in `~/Downloads/`.
 
 ### Environment Requirements
 
@@ -178,6 +189,26 @@ If the backend configuration returns `allowEnvSwitch: true` (or if using the fal
 - The `SocketContext` automatically disconnects and reconnects to the new WebSocket URL upon switching.
 - User selection is persisted locally across app restarts.
 
+## 📹 Video Call Architecture (Daily.co)
+
+The app supports real-time video calls between users and mechanics using the **Daily.co** API.
+
+### Flow
+1. User requests **Video Call** assistance → mechanic accepts → both redirected to **Video Lobby**.
+2. User taps the pulsing green circle → **"Start Video Chat"** → server creates a Daily.co room (5-min expiry).
+3. Server stores room URL on the record and notifies the mechanic via WebSocket (`video_room_ready`).
+4. Mechanic's lobby detects the room (WebSocket + 3s polling fallback) → taps **"Join Video Call"**.
+5. Both enter a full-screen **WebView** loading the Daily.co room with a countdown timer.
+6. If either disconnects, they can rejoin from the lobby or appointment detail screen while the room is active.
+
+### Backend Endpoints
+- `POST /api/video-room` — Creates a Daily.co room with 5-min expiry, stores it on the appointment/assistance record.
+- `GET /api/video-room/:appointmentId` — Returns the stored room URL, name, expiry, and whether it has expired.
+
+### Key Dependencies
+- `react-native-webview` — Embeds the Daily.co video interface in the mobile app.
+- `react-native-reanimated` — Powers the pulsing green circle animation in the lobby.
+
 ## 🤝 Contributing
 
 1. Fork the project
@@ -189,4 +220,3 @@ If the backend configuration returns `allowEnvSwitch: true` (or if using the fal
 ## 📄 License
 
 This project is private and for internal use only.
-# mechanic

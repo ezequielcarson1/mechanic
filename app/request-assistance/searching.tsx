@@ -23,7 +23,7 @@ export default function SearchingScreen() {
             })
         ).start();
 
-        // Fallback: check current status once on mount
+        // Fallback: poll every 5s for status changes (in case WebSocket drops)
         const checkCurrentStatus = async () => {
             if (!requestId) return;
             try {
@@ -35,10 +35,14 @@ export default function SearchingScreen() {
                     });
                 }
             } catch (error) {
-                console.error('Failed to check status on search mount:', error);
+                console.error('Failed to check status:', error);
             }
         };
+
+        // Check immediately, then every 5 seconds
         checkCurrentStatus();
+        const interval = setInterval(checkCurrentStatus, 5000);
+        return () => clearInterval(interval);
     }, [requestId]);
 
     // Real-time listener for status updates

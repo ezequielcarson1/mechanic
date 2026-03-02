@@ -139,7 +139,13 @@ db.serialize(() => {
     'ALTER TABLE assistance_requests ADD COLUMN assistanceType TEXT DEFAULT "immediate"',
     'ALTER TABLE appointments ADD COLUMN zip TEXT',
     'ALTER TABLE appointments ADD COLUMN assistanceType TEXT DEFAULT "immediate"',
-    'ALTER TABLE users ADD COLUMN isOnline INTEGER DEFAULT 0'
+    'ALTER TABLE users ADD COLUMN isOnline INTEGER DEFAULT 0',
+    'ALTER TABLE appointments ADD COLUMN videoRoomUrl TEXT',
+    'ALTER TABLE appointments ADD COLUMN videoRoomName TEXT',
+    'ALTER TABLE appointments ADD COLUMN videoRoomExpiry TEXT',
+    'ALTER TABLE assistance_requests ADD COLUMN videoRoomUrl TEXT',
+    'ALTER TABLE assistance_requests ADD COLUMN videoRoomName TEXT',
+    'ALTER TABLE assistance_requests ADD COLUMN videoRoomExpiry TEXT'
   ];
 
   columnsToAdd.forEach(sql => {
@@ -179,13 +185,14 @@ db.serialize(() => {
   db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
     if (row && row.count === 0) {
       const users = [
+        ['admin-1', 'admin@mechanicapp.com', 'Admin', 'Mechanic', '+19990000001', '01/01/1990', 'admin'],
         ['user-1', 'john.doe@example.com', 'John', 'Doe', '+15550101234', '05/15/1988', 'user'],
         ['user-111', 'user111@example.com', 'Test', 'User', '+11111111111', '01/01/2000', 'user'],
         ['mech-1', 'ssammet135@gmail.com', 'Shayna', 'Samett', '+17188712281', '12/04/1995', 'mechanic'],
         ['mech-2', 'jane.smith@mechanic.com', 'Jane', 'Smith', '+15550205678', '08/22/1992', 'mechanic'],
         ['user-2', 'mike.brown@example.com', 'Mike', 'Brown', '+15550309012', '11/30/1985', 'user'],
-        ['user-basic', 'user@example.com', 'Regular', 'User', '+11', '01/01/1990', 'user'],
-        ['mech-basic', 'mechanic@example.com', 'Pro', 'Mechanic', '+12', '01/01/1985', 'mechanic']
+        ['user-basic', 'user@example.com', 'Regular', 'User', '+12000000001', '01/01/1990', 'user'],
+        ['mech-basic', 'mechanic@example.com', 'Pro', 'Mechanic', '+12000000002', '01/01/1985', 'mechanic']
       ];
       const stmt = db.prepare(`INSERT INTO users (id, email, name, surname, phone, dob, role) VALUES (?, ?, ?, ?, ?, ?, ?)`);
       users.forEach(u => stmt.run(u));

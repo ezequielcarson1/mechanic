@@ -72,6 +72,8 @@ export default function RootLayout() {
                 <Stack.Screen name="appointments/cancel-reason" />
                 <Stack.Screen name="chat/[id]" />
                 <Stack.Screen name="call/[id]" />
+                <Stack.Screen name="video-call/[id]" />
+                <Stack.Screen name="video-lobby/[id]" />
                 <Stack.Screen name="request-assistance/mechanic-found" />
                 <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
               </Stack>

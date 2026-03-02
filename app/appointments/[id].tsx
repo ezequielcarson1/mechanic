@@ -292,6 +292,25 @@ export default function AppointmentDetailScreen() {
                             </View>
                         </View>
 
+                        {/* Video Call Button - only for videocall type appointments */}
+                        {appointment.type === 'videocall' && (
+                            <View className="px-6 mb-6">
+                                <TouchableOpacity
+                                    onPress={() => router.push({
+                                        pathname: '/video-lobby/[id]' as any,
+                                        params: { id: appointment.id }
+                                    })}
+                                    className="bg-emerald-500 rounded-xl py-4 flex-row items-center justify-center gap-3 shadow-sm"
+                                    activeOpacity={0.8}
+                                >
+                                    <Ionicons name="videocam" size={24} color="white" />
+                                    <Text className="text-white font-outfit-bold text-lg">
+                                        {isUserRole ? 'Start Video Chat' : 'Join Video Call'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
                         {/* Tab Navigation - ROUNDED BUTTONS */}
                         <View className="px-6 mb-6" testID="tab-navigation-container" nativeID="tab-navigation-container">
                             <View className="flex-row flex-wrap justify-between gap-y-3">

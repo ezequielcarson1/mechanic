@@ -93,9 +93,12 @@ export default function ConfirmationScreen() {
                 <TouchableOpacity onPress={() => router.back()} className="mr-4">
                     <Ionicons name="chevron-back" size={24} color="#0F172A" />
                 </TouchableOpacity>
-                <Text className="text-xl font-outfit-bold text-[#0F172A] flex-1 text-center mr-8">
+                <Text className="text-xl font-outfit-bold text-[#0F172A] flex-1 text-center">
                     Assistance
                 </Text>
+                <TouchableOpacity onPress={() => router.replace('/(tabs)/assist')} className="ml-4">
+                    <Text className="text-red-500 font-outfit-medium text-xs">Cancel</Text>
+                </TouchableOpacity>
             </View>
 
             <ScrollView className="flex-1 px-6 pt-6">
