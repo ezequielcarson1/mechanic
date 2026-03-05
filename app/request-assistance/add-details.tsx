@@ -3,7 +3,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Plus, Upload } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+const MAX_PHOTOS = 3;
 
 export default function AddDetailsScreen() {
     const router = useRouter();
@@ -14,6 +16,11 @@ export default function AddDetailsScreen() {
     const [photos, setPhotos] = useState<string[]>([]);
 
     const pickImage = async () => {
+        if (photos.length >= MAX_PHOTOS) {
+            Alert.alert('Photo limit reached', `Only ${MAX_PHOTOS} photos are supported per request.`);
+            return;
+        }
+
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
@@ -86,6 +93,9 @@ export default function AddDetailsScreen() {
                     <Text className="text-gray-500 font-outfit-medium text-xs text-center">
                         Click <Text className="text-blue-600">here</Text> to upload / add photo
                     </Text>
+                    <Text className="text-gray-400 font-outfit-regular text-xs text-center mt-1">
+                        Max {MAX_PHOTOS} photos ({photos.length}/{MAX_PHOTOS})
+                    </Text>
                 </TouchableOpacity>
 
                 {/* Photo List */}
@@ -101,10 +111,13 @@ export default function AddDetailsScreen() {
 
                 <TouchableOpacity
                     onPress={pickImage}
+                    disabled={photos.length >= MAX_PHOTOS}
                     className="flex-row items-center justify-center mb-8"
                 >
-                    <Plus size={20} color="#0047AB" />
-                    <Text className="text-[#0047AB] font-outfit-bold ml-2">Add Photos</Text>
+                    <Plus size={20} color={photos.length >= MAX_PHOTOS ? '#9CA3AF' : '#0047AB'} />
+                    <Text className={`font-outfit-bold ml-2 ${photos.length >= MAX_PHOTOS ? 'text-gray-400' : 'text-[#0047AB]'}`}>
+                        {photos.length >= MAX_PHOTOS ? 'Photo limit reached (3/3)' : 'Add Photos'}
+                    </Text>
                 </TouchableOpacity>
 
                 <Button onPress={handleConfirm} className="bg-blue-700 rounded-xl mb-8">

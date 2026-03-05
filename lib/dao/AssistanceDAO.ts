@@ -22,6 +22,22 @@ export class AssistanceDAO implements IAssistanceDAO {
     async create(request: Partial<AssistanceRequest>): Promise<AssistanceRequest> {
         return apiClient.post('/api/assistance', request);
     }
+
+    /**
+     * Uploads a local image URI to S3 and returns the permanent URL.
+     * React Native FormData accepts { uri, type, name } as a file object.
+     */
+    async uploadPhoto(localUri: string): Promise<string> {
+        const filename = localUri.split('/').pop() || 'photo.jpg';
+        const ext = filename.split('.').pop()?.toLowerCase() || 'jpg';
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+        const formData = new FormData();
+        formData.append('photo', { uri: localUri, type: mimeType, name: filename } as any);
+
+        const result = await apiClient.upload<{ key: string; url: string }>('/api/photos/upload', formData);
+        return result.url;
+    }
 }
 
 export const assistanceDAO = new AssistanceDAO();

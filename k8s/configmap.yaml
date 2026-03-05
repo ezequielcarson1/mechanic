@@ -7,3 +7,6 @@ data:
   PORT: "3000"
   NODE_ENV: "production"
   DB_PATH: "/app/db/mechanic.db"
+  PHOTOS_PATH: "/app/photos"
+  S3_USE_LOCAL: "true"
+  S3_BUCKET: "mechanic-photos"

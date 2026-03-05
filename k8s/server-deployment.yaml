@@ -28,6 +28,8 @@ spec:
           volumeMounts:
             - name: db-storage
               mountPath: /app/db
+            - name: photos-storage
+              mountPath: /app/photos
           readinessProbe:
             httpGet:
               path: /health
@@ -44,3 +46,6 @@ spec:
         - name: db-storage
           persistentVolumeClaim:
             claimName: db-pvc
+        - name: photos-storage
+          persistentVolumeClaim:
+            claimName: photos-pvc

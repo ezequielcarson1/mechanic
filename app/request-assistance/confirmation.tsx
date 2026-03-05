@@ -4,7 +4,7 @@ import { assistanceDAO } from '@/lib/dao/AssistanceDAO';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ConfirmationScreen() {
     const router = useRouter();
@@ -25,6 +25,7 @@ export default function ConfirmationScreen() {
     } = params;
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState('');
     const [vehicleStr, setVehicleStr] = useState('Loading...');
 
     useEffect(() => {
@@ -39,6 +40,18 @@ export default function ConfirmationScreen() {
     const handleConfirm = async () => {
         setIsSubmitting(true);
         try {
+            // Upload photos to S3, then create the assistance request with permanent URLs
+            const localPhotos: string[] = photos ? JSON.parse(photos as string) : [];
+            const uploadedUrls: string[] = [];
+
+            for (let i = 0; i < localPhotos.length; i++) {
+                setUploadProgress(`Uploading photo ${i + 1} of ${localPhotos.length}...`);
+                const url = await assistanceDAO.uploadPhoto(localPhotos[i]);
+                uploadedUrls.push(url);
+            }
+
+            setUploadProgress('');
+
             // Extract ZIP from address if possible, or use passed locationZip
             const paramsZip = (params.locationZip as string) || '';
             const addr = finalAddress || addressLabel || '';
@@ -58,7 +71,7 @@ export default function ConfirmationScreen() {
                 locationLat: Number(latitude),
                 locationLng: Number(longitude),
                 status: 'pending',
-                photos: photos ? JSON.parse(photos as string) : [],
+                photos: uploadedUrls,
                 budget: 'TBD',
                 distance: '0 km',
                 zip: zipCode
@@ -70,7 +83,8 @@ export default function ConfirmationScreen() {
             });
         } catch (error) {
             console.error(error);
-            alert('Failed to submit request. Please try again.');
+            setUploadProgress('');
+            Alert.alert('Error', 'Failed to submit request. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -147,7 +161,12 @@ export default function ConfirmationScreen() {
                 </View>
 
                 {isSubmitting ? (
-                    <ActivityIndicator size="large" color="#0047AB" />
+                    <View className="items-center mb-8">
+                        <ActivityIndicator size="large" color="#0047AB" />
+                        {uploadProgress ? (
+                            <Text className="text-gray-500 font-outfit-regular text-sm mt-2">{uploadProgress}</Text>
+                        ) : null}
+                    </View>
                 ) : (
                     <Button onPress={handleConfirm} className="bg-blue-700 rounded-xl mb-8">
                         Confirm and Request

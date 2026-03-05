@@ -6726,3 +6726,13 @@
 [2026-03-02T03:07:50.968Z] [INFO] Registered user: 60b577d5-305f-423f-b6a2-fb3c13dcead3 
 [2026-03-02T03:07:54.919Z] [INFO] GET /api/assistance?zip=33327&status=pending 
 [2026-03-02T03:07:57.963Z] [INFO] Client disconnected: 60b577d5-305f-423f-b6a2-fb3c13dcead3 
+[2026-03-05T03:54:14.416Z] [CRITICAL] Uncaught Exception Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at node:net:2206:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+[2026-03-05T03:54:48.071Z] [INFO] GET /health 
+[2026-03-05T03:54:48.083Z] [INFO] POST /api/photos/upload 
+[2026-03-05T03:54:48.103Z] [INFO] Photo uploaded: 95fc0087-dc9b-43f3-9156-7b7ad1775c28.png 
+[2026-03-05T03:54:48.348Z] [INFO] GET /api/photos/95fc0087-dc9b-43f3-9156-7b7ad1775c28.png 
+[2026-03-05T03:54:48.360Z] [INFO] GET /api/photos/nonexistent.jpg 

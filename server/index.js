@@ -3,6 +3,10 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const multer = require('multer');
+const { PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { startS3rver, createS3Client, S3_BUCKET } = require('./s3client');
 const AssistanceDAO = require('./dao/AssistanceDAO');
 const AppointmentDAO = require('./dao/AppointmentDAO');
 const UserDAO = require('./dao/UserDAO');
@@ -16,6 +20,12 @@ const WebSocket = require('ws');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const logFilePath = path.join(__dirname, 'server.log');
+
+// S3 client — initialized after s3rver starts (see bottom async block)
+let s3;
+
+// Multer: store uploads in memory, max 10 MB per file
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -540,6 +550,53 @@ app.delete('/api/vehicles/:id', async (req, res) => {
     }
 });
 
+// ================== Photo Storage Routes (S3 / s3rver) ==================
+
+// Upload a photo — returns { key, url }
+app.post('/api/photos/upload', upload.single('photo'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file provided' });
+        }
+
+        const ext = (req.file.originalname.split('.').pop() || 'jpg').toLowerCase();
+        const key = `${crypto.randomUUID()}.${ext}`;
+
+        await s3.send(new PutObjectCommand({
+            Bucket: S3_BUCKET,
+            Key: key,
+            Body: req.file.buffer,
+            ContentType: req.file.mimetype,
+        }));
+
+        const url = `${req.protocol}://${req.get('host')}/api/photos/${key}`;
+        logMessage('INFO', `Photo uploaded: ${key}`);
+        res.status(201).json({ key, url });
+    } catch (err) {
+        logMessage('ERROR', 'Photo upload failed', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Retrieve a photo by key — streams the file back
+app.get('/api/photos/:key', async (req, res) => {
+    try {
+        const { Body, ContentType } = await s3.send(new GetObjectCommand({
+            Bucket: S3_BUCKET,
+            Key: req.params.key,
+        }));
+
+        res.setHeader('Content-Type', ContentType || 'image/jpeg');
+        Body.pipe(res);
+    } catch (err) {
+        if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
+            return res.status(404).json({ error: 'Photo not found' });
+        }
+        logMessage('ERROR', 'Photo retrieval failed', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Setup Routes
 app.get('/api/setup/:key', async (req, res) => {
     try {
@@ -559,20 +616,26 @@ app.post('/api/setup/:key', async (req, res) => {
     }
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    const os = require('os');
-    const interfaces = os.networkInterfaces();
-    const addresses = [];
-    for (const k in interfaces) {
-        for (const k2 in interfaces[k]) {
-            const address = interfaces[k][k2];
-            if (address.family === 'IPv4' && !address.internal) {
-                addresses.push(address.address);
+(async () => {
+    // Start local S3-compatible server before accepting requests
+    await startS3rver();
+    s3 = createS3Client();
+
+    server.listen(PORT, '0.0.0.0', () => {
+        const os = require('os');
+        const interfaces = os.networkInterfaces();
+        const addresses = [];
+        for (const k in interfaces) {
+            for (const k2 in interfaces[k]) {
+                const address = interfaces[k][k2];
+                if (address.family === 'IPv4' && !address.internal) {
+                    addresses.push(address.address);
+                }
             }
         }
-    }
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Accessible at:`);
-    console.log(`  http://localhost:${PORT}`);
-    addresses.forEach(addr => console.log(`  http://${addr}:${PORT}`));
-});
+        console.log(`Server running on port ${PORT}`);
+        console.log(`Accessible at:`);
+        console.log(`  http://localhost:${PORT}`);
+        addresses.forEach(addr => console.log(`  http://${addr}:${PORT}`));
+    });
+})();
