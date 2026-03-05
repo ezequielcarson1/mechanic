@@ -1,6 +1,7 @@
 import { useUser } from '@/context/UserContext';
 import { ConfigService } from '@/lib/config/ConfigService';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 
 export interface ChatMessage {
     id: string;
@@ -31,6 +32,15 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     // Keep reference to the latest WS instance so listener can close it and reconnect
     const currentSocket = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
+    const userIdRef = useRef<string | undefined>(undefined);
+
+    // Send unregister so server marks user offline immediately
+    const sendUnregister = () => {
+        const ws = currentSocket.current;
+        if (ws && ws.readyState === WebSocket.OPEN && userIdRef.current) {
+            ws.send(JSON.stringify({ type: 'unregister', userId: userIdRef.current }));
+        }
+    };
 
     const clearChatHistory = (conversationId: string) => {
         setChatHistory(prev => {
@@ -63,13 +73,14 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     // Initial connection logic & listener
     useEffect(() => {
+        userIdRef.current = user?.id;
+
         if (!user?.id) return;
 
         // Reconnect if config changes while we are authenticated
         const handleConfigChange = () => {
             console.log('[Socket] Config changed, reconnecting...');
             if (currentSocket.current) {
-                // Remove onclose to prevent the auto-reconnect from firing while we manually reconnect
                 currentSocket.current.onclose = null;
                 currentSocket.current.close();
             }
@@ -79,13 +90,29 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
         ConfigService.addListener(handleConfigChange);
 
-        // Ensure config is initialized, then connect
+        // Mark offline when app goes to background, online when it returns
+        const handleAppState = (nextState: AppStateStatus) => {
+            if (nextState === 'background' || nextState === 'inactive') {
+                sendUnregister();
+            } else if (nextState === 'active') {
+                // Re-register so server marks us online again
+                const ws = currentSocket.current;
+                if (ws && ws.readyState === WebSocket.OPEN && userIdRef.current) {
+                    ws.send(JSON.stringify({ type: 'register', userId: userIdRef.current }));
+                }
+            }
+        };
+        const appStateSub = AppState.addEventListener('change', handleAppState);
+
         ConfigService.init().then(() => {
             connect();
         });
 
         return () => {
             ConfigService.removeListener(handleConfigChange);
+            appStateSub.remove();
+            // Notify server before closing (logout path)
+            sendUnregister();
             if (currentSocket.current) {
                 currentSocket.current.onclose = null;
                 currentSocket.current.close();

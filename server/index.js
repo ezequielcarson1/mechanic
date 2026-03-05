@@ -33,6 +33,16 @@ const wss = new WebSocket.Server({ server });
 
 // Map to store active connections: userId -> WebSocket
 const clients = new Map();
+// Set of admin portal WebSocket connections for real-time dashboard updates
+const adminClients = new Set();
+
+// Broadcast user online/offline status change to all admin portal clients
+const broadcastUserStatus = (userId, isOnline, userInfo = {}) => {
+    const payload = JSON.stringify({ type: 'user_status_change', payload: { userId, isOnline, ...userInfo } });
+    for (const ws of adminClients) {
+        if (ws.readyState === WebSocket.OPEN) ws.send(payload);
+    }
+};
 
 wss.on('connection', (ws) => {
     logMessage('INFO', 'Client connected');
@@ -45,6 +55,26 @@ wss.on('connection', (ws) => {
                 clients.set(data.userId, ws);
                 ws.userId = data.userId;
                 logMessage('INFO', `Registered user: ${data.userId}`);
+                // Mark online in DB and notify admin dashboard
+                UserDAO.update(data.userId, { isOnline: 1 }).catch(() => {});
+                UserDAO.getById(data.userId).then(user => {
+                    if (user) broadcastUserStatus(data.userId, 1, { name: user.name, surname: user.surname, role: user.role, phone: user.phone });
+                }).catch(() => {});
+            }
+
+            // Admin portal registers for dashboard live updates
+            if (data.type === 'register_admin') {
+                adminClients.add(ws);
+                ws.isAdmin = true;
+                logMessage('INFO', 'Admin dashboard connected');
+            }
+
+            // Explicit disconnect from client (logout or app background)
+            if (data.type === 'unregister' && data.userId) {
+                clients.delete(data.userId);
+                logMessage('INFO', `User unregistered: ${data.userId}`);
+                UserDAO.update(data.userId, { isOnline: 0 }).catch(() => {});
+                broadcastUserStatus(data.userId, 0);
             }
 
             // Relay chat messages
@@ -66,9 +96,16 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
+        if (ws.isAdmin) {
+            adminClients.delete(ws);
+            logMessage('INFO', 'Admin dashboard disconnected');
+        }
         if (ws.userId) {
             clients.delete(ws.userId);
             logMessage('INFO', `Client disconnected: ${ws.userId}`);
+            // Mark offline in DB and notify admin dashboard
+            UserDAO.update(ws.userId, { isOnline: 0 }).catch(() => {});
+            broadcastUserStatus(ws.userId, 0);
         }
     });
 
