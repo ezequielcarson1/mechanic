@@ -6736,3 +6736,8 @@
 [2026-03-05T03:54:48.103Z] [INFO] Photo uploaded: 95fc0087-dc9b-43f3-9156-7b7ad1775c28.png 
 [2026-03-05T03:54:48.348Z] [INFO] GET /api/photos/95fc0087-dc9b-43f3-9156-7b7ad1775c28.png 
 [2026-03-05T03:54:48.360Z] [INFO] GET /api/photos/nonexistent.jpg 
+[2026-03-05T04:26:31.483Z] [INFO] GET /health 
+[2026-03-05T04:26:31.494Z] [INFO] POST /api/assistance 
+[2026-03-05T04:26:37.261Z] [INFO] User user-111 not connected (in map: false), notification skipped 
+[2026-03-05T04:26:37.567Z] [INFO] GET /api/assistance/d4f52679-8d01-4a11-9079-5cdcc8b60858 
+[2026-03-05T04:26:37.590Z] [INFO] GET /api/appointments?userId=user-111 

@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const { PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { startS3rver, createS3Client, S3_BUCKET } = require('./s3client');
+const bot = require('./bot');
 const AssistanceDAO = require('./dao/AssistanceDAO');
 const AppointmentDAO = require('./dao/AppointmentDAO');
 const UserDAO = require('./dao/UserDAO');
@@ -56,6 +57,8 @@ wss.on('connection', (ws) => {
                     text: data.text,
                     timestamp: new Date().toISOString()
                 });
+                // Let the bot mechanic auto-reply if it's the recipient
+                bot.handleChatMessage(data);
             }
         } catch (e) {
             console.error('Failed to parse message', e);
@@ -168,8 +171,16 @@ app.patch('/api/assistance/:id', async (req, res) => {
         const { mechanicId, status } = req.body;
         await AssistanceDAO.updateStatus(req.params.id, mechanicId, status);
 
+        // If the user confirmed a bot-offered appointment, sync the appointments table row
+        // so the list shows 'accepted' instead of the pre-created 'offered' status
+        if (status === 'accepted') {
+            const existing = await AppointmentDAO.getById(req.params.id);
+            if (existing) {
+                await AppointmentDAO.update(req.params.id, { status: 'accepted' });
+            }
+        }
+
         // Notify the user who created the request about the status change
-        // We first need to get the request to know the userId
         const request = await AssistanceDAO.getById(req.params.id);
         if (request && request.userId) {
             notifyUser(request.userId, 'assistance_update', {
@@ -179,7 +190,7 @@ app.patch('/api/assistance/:id', async (req, res) => {
             });
         }
 
-        // Check if we should notify the mechanic (e.g. when User accepts)
+        // Also notify the mechanic when user confirms (status === 'accepted')
         if (status === 'accepted' && mechanicId) {
             notifyUser(mechanicId, 'assistance_update', {
                 requestId: req.params.id,
@@ -620,6 +631,9 @@ app.post('/api/setup/:key', async (req, res) => {
     // Start local S3-compatible server before accepting requests
     await startS3rver();
     s3 = createS3Client();
+
+    // Start test mechanic bot (only activates for test user +11111111111)
+    await bot.init(notifyUser);
 
     server.listen(PORT, '0.0.0.0', () => {
         const os = require('os');

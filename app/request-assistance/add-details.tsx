@@ -104,6 +104,12 @@ export default function AddDetailsScreen() {
                         {photos.map((uri, index) => (
                             <View key={index} className="mr-3 relative">
                                 <Image source={{ uri }} className="w-20 h-20 rounded-lg" />
+                                <TouchableOpacity
+                                    onPress={() => setPhotos(photos.filter((_, i) => i !== index))}
+                                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full items-center justify-center"
+                                >
+                                    <Text className="text-white text-xs font-outfit-bold leading-none">✕</Text>
+                                </TouchableOpacity>
                             </View>
                         ))}
                     </ScrollView>

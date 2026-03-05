@@ -3,12 +3,14 @@ const db = require('../db');
 class AppointmentDAO {
     static getAll(filters = {}) {
         let sql = `
-            SELECT a.*, 
+            SELECT a.*,
                    u.phone as userPhone, u.name as userName, u.surname as userSurname,
-                   m.phone as mechanicPhone, m.name as mechanicName, m.surname as mechanicSurname
+                   m.phone as mechanicPhone, m.name as mechanicName, m.surname as mechanicSurname,
+                   ar.photos as photos
             FROM appointments a
             LEFT JOIN users u ON a.userId = u.id
             LEFT JOIN users m ON a.mechanicId = m.id
+            LEFT JOIN assistance_requests ar ON a.id = ar.id
             WHERE 1=1
         `;
         const params = [];
@@ -39,12 +41,14 @@ class AppointmentDAO {
     static getById(id) {
         return new Promise((resolve, reject) => {
             db.get(`
-                SELECT a.*, 
+                SELECT a.*,
                        u.phone as userPhone, u.name as userName, u.surname as userSurname,
-                       m.phone as mechanicPhone, m.name as mechanicName, m.surname as mechanicSurname
+                       m.phone as mechanicPhone, m.name as mechanicName, m.surname as mechanicSurname,
+                       ar.photos as photos
                 FROM appointments a
                 LEFT JOIN users u ON a.userId = u.id
                 LEFT JOIN users m ON a.mechanicId = m.id
+                LEFT JOIN assistance_requests ar ON a.id = ar.id
                 WHERE a.id = ?
             `, [id], (err, row) => {
                 if (err) reject(err);
