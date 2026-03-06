@@ -1,6 +1,29 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+
+// Firebase API key for server-side ID token verification (no service account needed)
+const FIREBASE_API_KEY = 'AIzaSyCIlnVhrJgKit5dl8F8CTWsAQBjnoZiLL0';
+
+/**
+ * Verifies a Firebase ID token using the Identity Toolkit REST API.
+ * Returns { uid, phone } on success, throws on failure.
+ */
+async function verifyFirebaseToken(idToken) {
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+    });
+    const data = await response.json();
+    if (data.error) {
+        throw new Error(data.error.message || 'Firebase token verification failed');
+    }
+    const fbUser = data.users?.[0];
+    if (!fbUser) throw new Error('Invalid Firebase token');
+    return { uid: fbUser.localId, phone: fbUser.phoneNumber };
+}
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -518,15 +541,35 @@ app.post('/api/users', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
     try {
-        const { phone } = req.body;
-        const user = await UserDAO.getByPhone(phone);
-        if (user) {
-            res.json(user);
-        } else {
-            res.status(404).json({ error: 'User not found' });
+        const { idToken, phone } = req.body;
+
+        let resolvedPhone = phone;
+        let firebaseUid = null;
+
+        // Firebase-authenticated login (preferred path)
+        if (idToken) {
+            const verified = await verifyFirebaseToken(idToken);
+            resolvedPhone = verified.phone;
+            firebaseUid = verified.uid;
         }
+
+        if (!resolvedPhone) {
+            return res.status(400).json({ error: 'Phone number or Firebase ID token required' });
+        }
+
+        const user = await UserDAO.getByPhone(resolvedPhone);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found. Please register first.' });
+        }
+
+        // Sync Firebase UID if not stored yet
+        if (firebaseUid && !user.firebaseUid) {
+            await UserDAO.update(user.id, { firebaseUid });
+        }
+
+        res.json({ ...user, firebaseUid: firebaseUid || user.firebaseUid });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(401).json({ error: err.message });
     }
 });
 

@@ -10,8 +10,14 @@ export class UserDAO implements IUserDAO {
         return apiClient.get(`/api/users/${id}`);
     }
 
+    /** Legacy phone-only login (kept for reference — use loginWithFirebase instead) */
     async login(phone: string): Promise<UserData | null> {
         return apiClient.post('/api/login', { phone });
+    }
+
+    /** Firebase-authenticated login: sends the ID token to the backend for verification */
+    async loginWithFirebase(firebaseIdToken: string): Promise<UserData | null> {
+        return apiClient.post('/api/login', { idToken: firebaseIdToken });
     }
 
     async checkPhoneExists(phone: string): Promise<boolean> {

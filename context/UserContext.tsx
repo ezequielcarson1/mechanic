@@ -1,3 +1,4 @@
+import { firebaseSignOut } from '@/lib/firebase/auth';
 import { userDAO } from '@/lib/dao/UserDAO';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
@@ -31,7 +32,8 @@ export interface UserData {
 interface UserContextType {
     user: UserData | null;
     isLoading: boolean;
-    login: (phone: string) => Promise<boolean>;
+    /** Pass the Firebase ID token obtained after OTP verification */
+    login: (firebaseIdToken: string) => Promise<boolean>;
     logout: () => Promise<void>;
     updateUser: (updates: Partial<UserData>, syncToBackend?: boolean) => Promise<void>;
 }
@@ -59,15 +61,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const login = async (phone: string): Promise<boolean> => {
+    /** Authenticates with the backend by sending the Firebase ID token.
+     *  The backend verifies the token, extracts the phone number, and returns the user record.
+     */
+    const login = async (firebaseIdToken: string): Promise<boolean> => {
         try {
-            const userData = await userDAO.login(phone);
+            const userData = await userDAO.loginWithFirebase(firebaseIdToken);
             if (userData) {
-                // Use the role from the database
-                const userWithRole: UserData = { ...userData };
-
-                setUser(userWithRole);
-                await AsyncStorage.setItem('user_session', JSON.stringify(userWithRole));
+                setUser(userData);
+                await AsyncStorage.setItem('user_session', JSON.stringify(userData));
                 return true;
             }
             return false;
@@ -80,6 +82,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const logout = async () => {
         setUser(null);
         await AsyncStorage.removeItem('user_session');
+        try {
+            await firebaseSignOut();
+        } catch {
+            // Ignore Firebase sign-out errors (e.g. already signed out)
+        }
     };
 
     const updateUser = async (updates: Partial<UserData>, syncToBackend: boolean = true) => {

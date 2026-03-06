@@ -99,10 +99,33 @@ class UserDAO {
         });
     }
 
+    static getByFirebaseUid(firebaseUid) {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                SELECT u.*, a.street, a.apartment, a.city, a.state, a.zip
+                FROM users u
+                LEFT JOIN user_addresses a ON u.id = a.userId
+                WHERE u.firebaseUid = ?
+            `;
+            db.get(sql, [firebaseUid], (err, row) => {
+                if (err) reject(err);
+                else if (!row) resolve(null);
+                else {
+                    const { street, apartment, city, state, zip, ...user } = row;
+                    resolve({
+                        ...user,
+                        address: street ? { street, apartment, city, state, zip } : null
+                    });
+                }
+            });
+        });
+    }
+
     static create(userData) {
-        const { basicInfo, phone, role, address, vehicles, credentials, dealerInfo, expertise, availability } = userData;
+        const { basicInfo, phone, role, address, vehicles, credentials, dealerInfo, expertise, availability, otp } = userData;
         const email = basicInfo?.email;
         const id = crypto.randomUUID();
+        const firebaseUid = otp?.firebaseUid || null;
 
         if (!email) {
             return Promise.reject(new Error("Email is required for registration"));
@@ -124,7 +147,7 @@ class UserDAO {
                 db.run("BEGIN TRANSACTION");
 
                 // 1. Insert User
-                const userSql = `INSERT INTO users (id, email, name, surname, phone, dob, role, profileImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+                const userSql = `INSERT INTO users (id, email, name, surname, phone, dob, role, profileImage, firebaseUid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
                 db.run(userSql, [
                     id,
                     email,
@@ -133,7 +156,8 @@ class UserDAO {
                     phone?.phoneNumber || '',
                     basicInfo.dob || '',
                     role?.role || 'user',
-                    basicInfo.profileImage || ''
+                    basicInfo.profileImage || '',
+                    firebaseUid
                 ], (err) => {
                     if (err) return handleError(err);
                 });

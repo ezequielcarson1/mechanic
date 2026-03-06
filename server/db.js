@@ -145,7 +145,8 @@ db.serialize(() => {
     'ALTER TABLE appointments ADD COLUMN videoRoomExpiry TEXT',
     'ALTER TABLE assistance_requests ADD COLUMN videoRoomUrl TEXT',
     'ALTER TABLE assistance_requests ADD COLUMN videoRoomName TEXT',
-    'ALTER TABLE assistance_requests ADD COLUMN videoRoomExpiry TEXT'
+    'ALTER TABLE assistance_requests ADD COLUMN videoRoomExpiry TEXT',
+    'ALTER TABLE users ADD COLUMN firebaseUid TEXT'
   ];
 
   columnsToAdd.forEach(sql => {

@@ -101,7 +101,7 @@ WS message types in use: `register`, `unregister`, `chat_message`, `assistance_u
 - Upload returns a full absolute URL (`http://<host>/api/photos/<uuid>.jpg`) — stored as JSON array in `assistance_requests.photos`
 - Storage path controlled by `PHOTOS_PATH` env var (default: `path.join(__dirname, 'photos-data')`)
 - K8s: PVC `photos-pvc` mounted at `/app/photos`; configmap must include `PHOTOS_PATH=/app/photos`, `S3_USE_LOCAL=true`, `S3_BUCKET=mechanic-photos`
-- **Critical**: `appointments` table has no `photos` column. `AppointmentDAO.getAll()` and `getById()` must `LEFT JOIN assistance_requests ar ON a.id = ar.id` to expose `ar.photos`. Without this, `UserStatusTab` receives `null` photos even when they exist.
+- **Critical**: `appointments` table has no `photos`, `locationLat`, or `locationLng` columns. `AppointmentDAO.getAll()` and `getById()` must `LEFT JOIN assistance_requests ar ON a.id = ar.id` and select `ar.photos`, `ar.locationLat`, `ar.locationLng`. Without this join, maps and photos are always `null` even when data exists.
 - Mobile upload: `AssistanceDAO.uploadPhoto(localUri)` in `lib/dao/AssistanceDAO.ts` uses `apiClient.upload()` with `FormData`. The `upload()` method on `apiClient` must NOT set `Content-Type` header manually — fetch sets it with the multipart boundary automatically.
 - Max 3 photos per request (enforced in `app/request-assistance/add-details.tsx`)
 
@@ -115,6 +115,15 @@ WS message types in use: `register`, `unregister`, `chat_message`, `assistance_u
 - Replies to chat messages directed to `mech-1` with random realistic responses (1.5–3.5s delay)
 - Bot is initialized in the async startup block in `server/index.js` via `bot.init(notifyUser)`
 - Bot handles WS chat messages: `bot.handleChatMessage(data)` is called from the WS message handler
+- **Video calls**: when `POST /api/video-room` is called for an appointment where `mechanicId === 'mech-1'`, the server calls `bot.handleVideoRoomReady(...)`, which delegates to the **video-bot microservice** (`http://video-bot:3002/join`). The bot appears as a real Daily.co participant named "Mechanic" for 2 minutes, then the room is deleted.
+
+### Video Bot Microservice (`video-bot/`)
+- Separate K8s deployment (ClusterIP service `video-bot:3002`) — keeps Chromium/Puppeteer out of the main server image
+- `video-bot/index.js` — Express server with `POST /join` endpoint
+- On `/join`: creates a Daily.co meeting token (user_name: `'Mechanic'`), starts an **Xvfb** virtual display, launches **non-headless Chromium** (fake camera/mic via `--use-fake-ui-for-media-stream`), navigates directly to the Daily.co HTTPS room URL (secure context = WebRTC enabled), clicks the "Join" button, stays 2 minutes, then closes the browser and deletes the Daily.co room via REST API
+- **Critical**: must navigate to the actual `https://` Daily.co room URL — loading `about:blank` disables WebRTC (non-secure context). `headless: 'new'` also disables WebRTC; must use `headless: false` + Xvfb
+- `video-bot/Dockerfile` — `node:20-alpine` + `chromium`, `xvfb`, `dbus` packages; `puppeteer-core` installed via npm
+- K8s manifests: `k8s/video-bot-deployment.yaml`, `k8s/video-bot-service.yaml`
 
 ### `appointments` vs `assistance_requests` tables
 - Both tables share the same `id` (the assistance request ID)
@@ -127,6 +136,7 @@ WS message types in use: `register`, `unregister`, `chat_message`, `assistance_u
 2. User starts call → `POST /api/video-room` creates Daily.co room (5-min expiry)
 3. Server notifies mechanic via `video_room_ready` WS event (3s polling fallback)
 4. Both open full-screen WebView with the room URL + countdown timer
+5. If mechanic is the bot (`mech-1`), `bot.handleVideoRoomReady()` is called → video-bot microservice joins Daily.co as a real participant ("Mechanic") for 2 minutes
 
 ### User Online Tracking
 The `users.isOnline` column is updated purely through WebSocket events — no polling.
@@ -189,8 +199,10 @@ Mobile: **NativeWind** (Tailwind classes on RN components). Base components in `
 | Video call | `app/video-lobby/[id].tsx`, `app/video-call/[id].tsx`, `/api/video-room*` in backend |
 | DB schema | `DB.MD`, `server/mechanic.db`, `server/dao/` |
 | Environment config | `lib/config/ConfigService.ts`, `context/SocketContext.tsx` |
-| Photo upload/display | `app/request-assistance/add-details.tsx`, `app/request-assistance/confirmation.tsx`, `lib/dao/AssistanceDAO.ts`, `server/s3client.js`, `server/dao/AppointmentDAO.js`, `components/appointments/UserStatusTab.tsx` |
+| Photo upload/display | `app/request-assistance/add-details.tsx`, `app/request-assistance/confirmation.tsx`, `lib/dao/AssistanceDAO.ts`, `server/s3client.js`, `server/dao/AppointmentDAO.js`, `components/appointments/UserStatusTab.native.tsx` |
+| Appointment map | `components/appointments/UserStatusTab.native.tsx` (user), `components/appointments/MechanicAssistanceInfoTab.native.tsx` (mechanic) — both require `locationLat`/`locationLng` from server DAO join |
 | Mechanic bot | `server/bot.js` |
+| Video bot (bot Daily.co participant) | `video-bot/index.js`, `k8s/video-bot-deployment.yaml`, `k8s/video-bot-service.yaml` |
 | User online tracking | `context/SocketContext.tsx`, `server/index.js` (`broadcastUserStatus`), `admin-portal/src/pages/Dashboard.tsx` |
 | Admin portal dashboard | `admin-portal/src/pages/Dashboard.tsx`, `admin-portal/src/App.tsx` |
 

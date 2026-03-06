@@ -6741,3 +6741,8 @@
 [2026-03-05T04:26:37.261Z] [INFO] User user-111 not connected (in map: false), notification skipped 
 [2026-03-05T04:26:37.567Z] [INFO] GET /api/assistance/d4f52679-8d01-4a11-9079-5cdcc8b60858 
 [2026-03-05T04:26:37.590Z] [INFO] GET /api/appointments?userId=user-111 
+[2026-03-06T15:29:55.555Z] [CRITICAL] Uncaught Exception Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at node:net:2206:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
