@@ -2,7 +2,7 @@
 # Node.js / Express + SQLite + WebSocket
 FROM node:20-alpine
 
-# Install build tools needed for native sqlite3 bindings
+# Build tools needed for native sqlite3 bindings
 RUN apk add --no-cache python3 make g++
 
 WORKDIR /app

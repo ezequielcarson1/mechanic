@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-bot
+  namespace: mechanic
+  labels:
+    app: video-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video-bot
+  template:
+    metadata:
+      labels:
+        app: video-bot
+    spec:
+      containers:
+        - name: video-bot
+          image: mechanic-video-bot:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3002
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 20
+            periodSeconds: 20

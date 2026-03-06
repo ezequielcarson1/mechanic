@@ -31,7 +31,27 @@ ssh $REMOTE_USER@$REMOTE_HOST "gunzip -c ~/server-img.tar.gz | docker exec -i mi
 rm server-img.tar.gz
 echo "✅ Server image updated remotely!"
 
-echo "📦 [2/2] Building and synchronizing Admin Portal container (linux/amd64)..."
+echo "📦 [2/3] Building and synchronizing Video Bot container (linux/amd64)..."
+cd video-bot
+docker build --platform linux/amd64 -t mechanic-video-bot:latest .
+cd ..
+
+echo "   -> Saving and compressing Video Bot image locally..."
+docker save mechanic-video-bot:latest | gzip > video-bot-img.tar.gz
+
+echo "   -> Uploading Video Bot image to Azure ($REMOTE_HOST)..."
+scp video-bot-img.tar.gz $REMOTE_USER@$REMOTE_HOST:~/video-bot-img.tar.gz
+
+echo "   -> Loading Video Bot image into remote Minikube..."
+ssh $REMOTE_USER@$REMOTE_HOST "gunzip -c ~/video-bot-img.tar.gz | docker exec -i minikube docker load && rm ~/video-bot-img.tar.gz"
+rm video-bot-img.tar.gz
+echo "✅ Video Bot image updated remotely!"
+
+echo "📋 Applying Video Bot K8s manifests..."
+kubectl --kubeconfig=$KUBE_CONFIG apply -f k8s/video-bot-service.yaml
+kubectl --kubeconfig=$KUBE_CONFIG apply -f k8s/video-bot-deployment.yaml
+
+echo "📦 [3/3] Building and synchronizing Admin Portal container (linux/amd64)..."
 cd admin-portal
 docker build --platform linux/amd64 -t mechanic-admin-portal:latest .
 cd ..
@@ -62,6 +82,26 @@ fi
 echo "🔄 Restarting pods to apply container updates..."
 kubectl --kubeconfig=$KUBE_CONFIG rollout restart deployment mechanic-server -n mechanic
 kubectl --kubeconfig=$KUBE_CONFIG rollout restart deployment mechanic-admin -n mechanic
+kubectl --kubeconfig=$KUBE_CONFIG rollout restart deployment video-bot -n mechanic
 
-echo "👀 Watching pod status (Press Ctrl+C to exit)..."
-kubectl --kubeconfig=$KUBE_CONFIG get pods -n mechanic -w
+echo "⏳ Waiting for rollouts to complete..."
+kubectl --kubeconfig=$KUBE_CONFIG rollout status deployment mechanic-server -n mechanic --timeout=120s
+kubectl --kubeconfig=$KUBE_CONFIG rollout status deployment mechanic-admin -n mechanic --timeout=120s
+kubectl --kubeconfig=$KUBE_CONFIG rollout status deployment video-bot -n mechanic --timeout=180s
+
+echo ""
+echo "🔍 Verifying pods are running..."
+kubectl --kubeconfig=$KUBE_CONFIG get pods -n mechanic
+
+echo ""
+echo "🏥 Checking service health..."
+sleep 3
+SERVER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://20.124.131.193:3000/health 2>/dev/null || echo "000")
+if [ "$SERVER_STATUS" = "200" ]; then
+  echo "✅ mechanic-server health check passed (HTTP $SERVER_STATUS)"
+else
+  echo "⚠️  mechanic-server returned HTTP $SERVER_STATUS — pod may still be starting"
+fi
+
+echo ""
+echo "🎉 Upload complete!"

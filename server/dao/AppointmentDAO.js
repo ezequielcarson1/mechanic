@@ -6,7 +6,7 @@ class AppointmentDAO {
             SELECT a.*,
                    u.phone as userPhone, u.name as userName, u.surname as userSurname,
                    m.phone as mechanicPhone, m.name as mechanicName, m.surname as mechanicSurname,
-                   ar.photos as photos
+                   ar.photos as photos, ar.locationLat as locationLat, ar.locationLng as locationLng
             FROM appointments a
             LEFT JOIN users u ON a.userId = u.id
             LEFT JOIN users m ON a.mechanicId = m.id
@@ -44,7 +44,7 @@ class AppointmentDAO {
                 SELECT a.*,
                        u.phone as userPhone, u.name as userName, u.surname as userSurname,
                        m.phone as mechanicPhone, m.name as mechanicName, m.surname as mechanicSurname,
-                       ar.photos as photos
+                       ar.photos as photos, ar.locationLat as locationLat, ar.locationLng as locationLng
                 FROM appointments a
                 LEFT JOIN users u ON a.userId = u.id
                 LEFT JOIN users m ON a.mechanicId = m.id

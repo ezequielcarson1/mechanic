@@ -93,7 +93,7 @@ Screens must use DAOs or Contexts, not raw `fetch`. For new features: add DAO me
 - `server/dao/` — server-side DAOs (JS): `AssistanceDAO`, `AppointmentDAO`, `UserDAO`, `VehicleDAO`, `SetupDAO`
 - SQLite at `server/mechanic.db` — schema documented in `DB.MD`
 
-WS message types in use: `register`, `chat_message`, `assistance_update`, `video_room_ready`.
+WS message types in use: `register`, `unregister`, `chat_message`, `assistance_update`, `video_room_ready`, `register_admin`, `user_status_change`.
 
 ### Photo Storage (`server/s3client.js`)
 - `s3rver` runs internally on `127.0.0.1:4568` (never exposed directly)
@@ -128,8 +128,41 @@ WS message types in use: `register`, `chat_message`, `assistance_update`, `video
 3. Server notifies mechanic via `video_room_ready` WS event (3s polling fallback)
 4. Both open full-screen WebView with the room URL + countdown timer
 
+### User Online Tracking
+The `users.isOnline` column is updated purely through WebSocket events — no polling.
+
+**Server (`server/index.js`):**
+- `clients` Map — active app WS connections (userId → ws)
+- `adminClients` Set — admin portal WS connections for dashboard broadcasts
+- On `register` message → `UserDAO.update(userId, { isOnline: 1 })` + broadcast `user_status_change` to all admin clients
+- On `unregister` message (explicit logout/background) → `UserDAO.update(userId, { isOnline: 0 })` + broadcast
+- On WS `close` event → same offline update (fallback for killed/crashed app)
+- `broadcastUserStatus(userId, isOnline, userInfo)` sends `{ type: 'user_status_change', payload: { userId, isOnline, name, surname, role, phone } }` to all admin portal connections
+
+**Mobile (`context/SocketContext.tsx`):**
+- Sends `{ type: 'unregister', userId }` explicitly in three cases:
+  1. `useEffect` cleanup (user logs out — `user?.id` becomes null)
+  2. `AppState 'background'` or `'inactive'` — app goes to background
+  3. Re-sends `{ type: 'register', userId }` when `AppState` returns to `'active'`
+- `userIdRef` keeps the userId accessible inside event handlers after user state clears
+
+**Admin Portal (`admin-portal/src/pages/Dashboard.tsx`):**
+- On mount: fetches all users via `UserAPI.getAll()` (already includes `isOnline` from `SELECT *`)
+- Connects WS with `{ type: 'register_admin' }` — receives `user_status_change` events in real time
+- Auto-reconnects with 5s backoff if WS drops
+- Shows live indicator dot, summary cards (total / online / online users / online mechanics), and two grids (online / offline)
+- WS URL derived from `VITE_API_BASE_URL` env var: strips `/api` suffix and replaces `http` → `ws`
+
+**Admin portal credentials:**
+- Phone: `+10000000000` (enter as `0000000000` in login form)
+- Password: `admin123` (fallback; override with `VITE_ADMIN_PASSWORD` env var)
+- User ID: `admin-1`, role: `admin` — seeded in `server/mechanic.db`
+- ⚠️ `npm run upload` overwrites the remote DB with the local one — the admin user must exist in the local `server/mechanic.db` before uploading
+
 ### Admin Portal (`admin-portal/`)
 SPA with react-router-dom + axios. Use `VITE_*` env vars for API URLs.
+- `VITE_API_BASE_URL` — HTTP API base (e.g. `http://20.124.131.193:3000/api`); WS URL is auto-derived from it
+- `VITE_ADMIN_PASSWORD` — admin login password (default: `admin123`)
 
 ### Styling
 Mobile: **NativeWind** (Tailwind classes on RN components). Base components in `components/ui/`.
@@ -158,6 +191,8 @@ Mobile: **NativeWind** (Tailwind classes on RN components). Base components in `
 | Environment config | `lib/config/ConfigService.ts`, `context/SocketContext.tsx` |
 | Photo upload/display | `app/request-assistance/add-details.tsx`, `app/request-assistance/confirmation.tsx`, `lib/dao/AssistanceDAO.ts`, `server/s3client.js`, `server/dao/AppointmentDAO.js`, `components/appointments/UserStatusTab.tsx` |
 | Mechanic bot | `server/bot.js` |
+| User online tracking | `context/SocketContext.tsx`, `server/index.js` (`broadcastUserStatus`), `admin-portal/src/pages/Dashboard.tsx` |
+| Admin portal dashboard | `admin-portal/src/pages/Dashboard.tsx`, `admin-portal/src/App.tsx` |
 
 ---
 
@@ -176,4 +211,4 @@ All three must be applied to the remote cluster for photos to work:
 3. `k8s/server-deployment.yaml` — must mount `photos-pvc` at `/app/photos`
 
 ### DB sync behavior
-`npm run upload` copies the local `server/mechanic.db` into the running pod — this overwrites the remote DB. Be careful when the remote has newer data (e.g., new user registrations or accepted appointments).
+`npm run upload` copies the local `server/mechanic.db` into the running pod — this **overwrites the remote DB**. Every upload wipes all remote users, appointments, and registrations. The admin user (`admin-1`) must always be present in the local DB before uploading. Consider pulling the remote DB before uploading if there is production data worth keeping.

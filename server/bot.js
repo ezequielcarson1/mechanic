@@ -20,6 +20,9 @@ const TEST_USER_PHONE = '+11111111111';
 const BOT_MECHANIC_ID = 'mech-1'; // Shayna Samett — existing seed mechanic
 const POLL_INTERVAL_MS = 4000;
 
+const BOT_VIDEO_DURATION_MS = 2 * 60 * 1000; // 2 minutes
+const VIDEO_BOT_URL = process.env.VIDEO_BOT_URL || 'http://video-bot:3002';
+
 const BOT_CHAT_REPLIES = [
     "On my way! Should be there in about 15 minutes.",
     "Got it, I'll take care of that right away.",
@@ -83,6 +86,38 @@ class MechanicBot {
             });
             console.log(`[BOT] Replied to chat in conversation ${data.conversationId}: "${text}"`);
         }, delay);
+    }
+
+    // ─── Video call handler (called from server/index.js when mech-1 is notified) ──
+
+    handleVideoRoomReady({ appointmentId, roomUrl, roomName, userId }) {
+        console.log(`[BOT] Video room ready — delegating to video-bot service for room "${roomName}"`);
+
+        this.notifyUser(userId, 'video_bot_joined', {
+            appointmentId,
+            roomUrl,
+            message: 'Mechanic is joining the video call...',
+        });
+
+        // Call the video-bot microservice (fire and forget — it handles join + 2min + room delete)
+        fetch(`${VIDEO_BOT_URL}/join`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomUrl, roomName }),
+        }).then(resp => {
+            if (resp.ok) console.log(`[BOT] video-bot session started for room "${roomName}"`);
+            else console.warn(`[BOT] video-bot /join returned ${resp.status}`);
+        }).catch(err => {
+            console.error('[BOT] Could not reach video-bot service:', err.message);
+        });
+
+        // Notify user that mechanic left after 2 minutes (matches video-bot session duration)
+        setTimeout(() => {
+            this.notifyUser(userId, 'video_bot_left', {
+                appointmentId,
+                message: 'Mechanic has left the video call',
+            });
+        }, BOT_VIDEO_DURATION_MS);
     }
 
     // ─── Internal ─────────────────────────────────────────────────────────────

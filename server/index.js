@@ -436,6 +436,16 @@ app.post('/api/video-room', async (req, res) => {
                     roomName: roomData.name,
                     expiry
                 });
+                // If the mechanic is the bot, have it join and auto-disconnect after 2 min
+                if (appointment.mechanicId === 'mech-1') {
+                    bot.handleVideoRoomReady({
+                        appointmentId,
+                        roomUrl: roomData.url,
+                        roomName: roomData.name,
+                        expiry,
+                        userId: appointment.userId,
+                    });
+                }
             }
             if (appointment.userId) {
                 notifyUser(appointment.userId, 'video_room_ready', {
