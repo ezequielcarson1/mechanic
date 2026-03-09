@@ -1,7 +1,8 @@
 import { firebaseSignOut } from '@/lib/firebase/auth';
 import { userDAO } from '@/lib/dao/UserDAO';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import auth from '@react-native-firebase/auth';
+import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
 export interface UserData {
     id: string;
@@ -44,29 +45,76 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<UserData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        loadSession();
-    }, []);
+    const initialCheckDone = useRef(false);
 
-    const loadSession = async () => {
+    useEffect(() => {
+        let unsubscribe: (() => void) | undefined;
+
         try {
-            const savedUser = await AsyncStorage.getItem('user_session');
-            if (savedUser) {
-                setUser(JSON.parse(savedUser));
-            }
-        } catch (error) {
-            console.error('Failed to load session', error);
-        } finally {
-            setIsLoading(false);
+            unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
+                // Only restore the session on the initial startup check.
+                // Post-login state is managed by the explicit login() call in the OTP flow.
+                if (initialCheckDone.current) return;
+                initialCheckDone.current = true;
+
+                if (firebaseUser) {
+                    try {
+                        const idToken = await firebaseUser.getIdToken();
+                        const userData = await userDAO.loginWithFirebase(idToken);
+                        if (userData) {
+                            setUser(userData);
+                            await AsyncStorage.setItem('user_session', JSON.stringify(userData));
+                        } else {
+                            // Firebase session valid but phone not registered in our DB
+                            setUser(null);
+                            await AsyncStorage.removeItem('user_session');
+                        }
+                    } catch (error) {
+                        console.error('[UserContext] Session restore failed:', error);
+                        setUser(null);
+                        await AsyncStorage.removeItem('user_session');
+                    }
+                } else {
+                    // No Firebase session — restore from AsyncStorage cache if available
+                    try {
+                        const stored = await AsyncStorage.getItem('user_session');
+                        if (stored) {
+                            setUser(JSON.parse(stored));
+                        } else {
+                            setUser(null);
+                        }
+                    } catch {
+                        setUser(null);
+                        await AsyncStorage.removeItem('user_session');
+                    }
+                }
+                setIsLoading(false);
+            });
+        } catch (err) {
+            // Firebase unavailable (e.g. web browser without native modules).
+            // Fall back to AsyncStorage-cached session so the app still loads.
+            console.warn('[UserContext] Firebase auth unavailable, using cached session:', err);
+            AsyncStorage.getItem('user_session')
+                .then(stored => {
+                    if (stored) {
+                        try { setUser(JSON.parse(stored)); } catch { setUser(null); }
+                    } else {
+                        setUser(null);
+                    }
+                })
+                .catch(() => setUser(null))
+                .finally(() => setIsLoading(false));
         }
-    };
+
+        return () => unsubscribe?.();
+    }, []);
 
     /** Authenticates with the backend by sending the Firebase ID token.
      *  The backend verifies the token, extracts the phone number, and returns the user record.
      */
-    const login = async (firebaseIdToken: string): Promise<boolean> => {
+    const login = async (firebaseIdToken: string, phone?: string): Promise<boolean> => {
         try {
-            const userData = await userDAO.loginWithFirebase(firebaseIdToken);
+            const userData = await userDAO.loginWithFirebase(firebaseIdToken, phone);
             if (userData) {
                 setUser(userData);
                 await AsyncStorage.setItem('user_session', JSON.stringify(userData));

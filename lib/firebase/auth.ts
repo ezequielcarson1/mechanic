@@ -1,4 +1,4 @@
-import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import auth, { FirebaseAuthTypes, getIdToken as firebaseGetIdToken } from '@react-native-firebase/auth';
 
 // Module-level store for the pending confirmation result (shared between screens during setup flow)
 let pendingConfirmation: FirebaseAuthTypes.ConfirmationResult | null = null;
@@ -8,7 +8,31 @@ let pendingConfirmation: FirebaseAuthTypes.ConfirmationResult | null = null;
  * @param phoneNumber  E.164 format, e.g. "+11234567890"
  */
 export const sendOTP = async (phoneNumber: string): Promise<void> => {
-    pendingConfirmation = await auth().signInWithPhoneNumber(phoneNumber);
+    console.log('[FirebaseAuth] sendOTP called for:', phoneNumber);
+    console.log('[FirebaseAuth] Current user before sendOTP:', auth().currentUser?.uid ?? 'none');
+
+    // Sign out any existing Firebase session before starting phone auth
+    // to avoid auth/internal-error when a previous user is still signed in
+    if (auth().currentUser) {
+        console.log('[FirebaseAuth] Signing out existing user before OTP...');
+        await auth().signOut();
+    }
+
+    const startTime = Date.now();
+    try {
+        console.log('[FirebaseAuth] Calling signInWithPhoneNumber...');
+        pendingConfirmation = await auth().signInWithPhoneNumber(phoneNumber);
+        const elapsed = Date.now() - startTime;
+        console.log(`[FirebaseAuth] signInWithPhoneNumber resolved in ${elapsed}ms`);
+        console.log('[FirebaseAuth] verificationId:', (pendingConfirmation as any)?.verificationId ?? 'n/a');
+    } catch (err: any) {
+        const elapsed = Date.now() - startTime;
+        console.error(`[FirebaseAuth] signInWithPhoneNumber FAILED after ${elapsed}ms:`, err?.code, err?.message);
+        console.error(`[FirebaseAuth] Full error:`, JSON.stringify(err, null, 2));
+        console.error(`[FirebaseAuth] nativeErrorMessage:`, err?.nativeErrorMessage);
+        console.error(`[FirebaseAuth] userInfo:`, JSON.stringify(err?.userInfo, null, 2));
+        throw err;
+    }
 };
 
 /**
@@ -30,7 +54,7 @@ export const verifyOTP = async (code: string): Promise<FirebaseAuthTypes.User> =
 /** Returns the Firebase ID token for the currently signed-in Firebase user. */
 export const getIdToken = async (): Promise<string | null> => {
     const user = auth().currentUser;
-    return user ? user.getIdToken() : null;
+    return user ? firebaseGetIdToken(user) : null;
 };
 
 /** True if we have a pending OTP confirmation waiting to be verified. */

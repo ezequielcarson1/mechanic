@@ -7,6 +7,12 @@ LogBox.ignoreLogs([
   'Accessing element.ref was removed in React 19',
   'Blocked aria-hidden on an element',
   /Blocked aria-hidden on an element/,
+  // RNFirebase namespaced API — intentionally kept (see FIREBASE_PHONE_AUTH.md)
+  'This method is deprecated (as well as all React Native Firebase namespaced API)',
+  // SafeAreaView from RN core — use react-native-safe-area-context (already done)
+  'SafeAreaView has been deprecated',
+  // ConfigService bootstrap fetch fails in dev/offline — fallback handles it
+  '[ConfigService] Could not fetch remote bootstrap config',
 ]);
 
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
@@ -21,10 +27,39 @@ import { GlobalNotificationListener } from '@/components/GlobalNotificationListe
 import { AppointmentsProvider } from '@/context/AppointmentsContext';
 import { NotificationsProvider } from '@/context/NotificationsContext';
 import { SocketProvider } from '@/context/SocketContext';
-import { UserProvider } from '@/context/UserContext';
+import { UserProvider, useUser } from '@/context/UserContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ConfigService } from '@/lib/config/ConfigService';
 import '../global.css';
+
+// Inner component — lives inside UserProvider so it can read auth loading state.
+// Keeps the splash screen visible until both fonts and the Firebase session check resolve.
+function AppShell() {
+  const { isLoading } = useUser();
+
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
+
+  if (isLoading) return null;
+
+  return (
+    <>
+      <GlobalNotificationListener />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="index" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="setup" />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
+      </Stack>
+      <StatusBar style="dark" />
+    </>
+  );
+}
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -42,14 +77,8 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    async function prepare() {
-      await ConfigService.init();
-      if (loaded || error) {
-        SplashScreen.hideAsync();
-      }
-    }
-    prepare();
-  }, [loaded, error]);
+    ConfigService.init();
+  }, []);
 
   if (!loaded && !error) {
     return null;
@@ -61,23 +90,7 @@ export default function RootLayout() {
         <SocketProvider>
           <NotificationsProvider>
             <AppointmentsProvider>
-              <GlobalNotificationListener />
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="index" />
-                <Stack.Screen name="login" />
-                <Stack.Screen name="onboarding" />
-                <Stack.Screen name="setup" />
-                <Stack.Screen name="appointments/[id]" />
-                <Stack.Screen name="appointments/cancel-reason" />
-                <Stack.Screen name="chat/[id]" />
-                <Stack.Screen name="call/[id]" />
-                <Stack.Screen name="video-call/[id]" />
-                <Stack.Screen name="video-lobby/[id]" />
-                <Stack.Screen name="request-assistance/mechanic-found" />
-                <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
-              </Stack>
-              <StatusBar style="dark" />
+              <AppShell />
             </AppointmentsProvider>
           </NotificationsProvider>
         </SocketProvider>

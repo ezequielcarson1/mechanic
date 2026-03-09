@@ -75,9 +75,14 @@ class UserDAO {
                 LEFT JOIN user_addresses a ON u.id = a.userId
                 WHERE (
                     REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(u.phone, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') = ?
-                    OR 
+                    OR
                     REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(u.phone, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') = '1' || ?
                 )
+                ORDER BY CASE
+                    WHEN REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(u.phone, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') = '1' || ? THEN 0
+                    ELSE 1
+                END
+                LIMIT 1
             `;
             let cleanedPhone = phone.replace(/\D/g, '');
             // If it's 11 digits starting with 1, get the last 10
@@ -85,7 +90,7 @@ class UserDAO {
                 cleanedPhone = cleanedPhone.substring(1);
             }
 
-            db.get(sql, [cleanedPhone, cleanedPhone], (err, row) => {
+            db.get(sql, [cleanedPhone, cleanedPhone, cleanedPhone], (err, row) => {
                 if (err) reject(err);
                 else if (!row) resolve(null);
                 else {

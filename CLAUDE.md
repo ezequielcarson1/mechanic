@@ -45,10 +45,15 @@ cd admin-portal && npm install && npm run dev
 
 ### Deployment
 ```bash
-npm run vpn      # SSH tunnel to remote Minikube (keep running; enables remote kubectl)
-npm run upload   # Build, push to Azure VM, sync DB, restart pods
-npm run local    # Build locally and restart Docker Desktop k8s pods
+npm run upload   # Build linux/amd64 images, push to Azure VM (Tailscale: minikube), sync DB, restart pods
+npm run local    # Sync prod users → build images → copy DB into pod → restart local k8s pods
 ```
+
+### Admin Portal dev server
+The admin portal vite dev server proxy target is controlled by `admin-portal/.env.local` (gitignored):
+- `npm run local` writes `ADMIN_API_TARGET=http://192.168.1.229:3000` → dev server hits local backend
+- `npm run upload` writes `ADMIN_API_TARGET=http://20.124.131.193:3000` → dev server hits prod backend
+- Docker/k8s deployments are unaffected (nginx proxies `/api` to `http://server:3000` internally)
 
 ---
 
@@ -58,7 +63,7 @@ npm run local    # Build locally and restart Docker Desktop k8s pods
 On startup, fetches config from `https://bootstrap.mechanicapp.com/config`, caches in AsyncStorage, falls back to `DEFAULT_FALLBACK_CONFIG`. All code uses `ConfigService.getApiBaseUrl()` and `ConfigService.getWsUrl()` — never hardcode endpoints.
 
 - PROD defaults: `http://20.124.131.193:3000` (API + WS)
-- DEV defaults: `http://localhost:3000` (iOS sim) / `http://10.0.2.2:3000` (Android emulator)
+- DEV defaults: `http://192.168.1.229:3000` (local LAN — iOS/Android real device) / `http://localhost:3000` (iOS sim) / `http://10.0.2.2:3000` (Android emulator)
 
 If the backend returns `allowEnvSwitch: true`, an `EnvSelector` toggle appears on the Login screen. Switching env auto-reconnects the WebSocket (`SocketContext` has a listener).
 
@@ -174,6 +179,16 @@ SPA with react-router-dom + axios. Use `VITE_*` env vars for API URLs.
 - `VITE_API_BASE_URL` — HTTP API base (e.g. `http://20.124.131.193:3000/api`); WS URL is auto-derived from it
 - `VITE_ADMIN_PASSWORD` — admin login password (default: `admin123`)
 
+### Firebase Phone Auth (`lib/firebase/auth.ts`)
+- Uses `auth().signInWithPhoneNumber(phoneNumber)` — **namespaced API only**. The modular `signInWithPhoneNumber(getAuth(), ...)` does not properly handle the reCAPTCHA fallback on iOS.
+- Signs out any existing Firebase user before calling `signInWithPhoneNumber` to avoid `auth/internal-error`.
+- **Firebase Blaze billing plan is required** for real SMS on real devices. Test phone numbers (Firebase Console → Authentication → Sign-in method → Phone → "Phone numbers for testing") bypass SMS and work on any plan — use them for local dev to avoid rate limiting.
+- `auth/too-many-requests` = device blocked due to too many failed attempts → wait ~1 hour or use a test phone number.
+- `auth/internal-error` in <500ms on real device = check Firebase billing (must be Blaze) and verify via: `curl -X POST "https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=<API_KEY>" -H "Content-Type: application/json" -d '{"phoneNumber":"+1...","recaptchaToken":"test"}'` — if returns `BILLING_NOT_ENABLED`, upgrade to Blaze.
+- APNs forwarding is set up in `ios/Mechanic/AppDelegate.swift` via `withFirebaseAuthAPNS` config plugin — `setAPNSToken(.sandbox)` for DEBUG, `.prod` for release. Required entitlements: `aps-environment: production`, `UIBackgroundModes: remote-notification`.
+- Config plugin files: `plugins/withFirebasePodfile.js`, `plugins/withFirebaseAuthAPNS.js` — these survive `expo prebuild --clean` (EAS).
+- `firebase/GoogleService-Info.plist` → copied to `ios/Mechanic/GoogleService-Info.plist` during prebuild. Must include `REVERSED_CLIENT_ID` for reCAPTCHA fallback.
+
 ### Styling
 Mobile: **NativeWind** (Tailwind classes on RN components). Base components in `components/ui/`.
 
@@ -192,7 +207,8 @@ Mobile: **NativeWind** (Tailwind classes on RN components). Base components in `
 
 | Task | Files |
 |------|-------|
-| Login / session | `app/login.tsx`, `context/UserContext.tsx`, `lib/dao/UserDAO.ts` |
+| Login / session | `app/login.tsx`, `context/UserContext.tsx`, `lib/dao/UserDAO.ts`, `lib/firebase/auth.ts` |
+| Firebase Phone Auth | `lib/firebase/auth.ts`, `plugins/withFirebaseAuthAPNS.js`, `firebase/GoogleService-Info.plist` |
 | Assistance feed | `app/(tabs)/assist/`, `lib/dao/AssistanceDAO.ts`, `server/dao/AssistanceDAO.js` |
 | Appointments | `app/(tabs)/appointments.tsx`, `app/appointments/`, `context/AppointmentsContext.tsx`, `server/dao/AppointmentDAO.js` |
 | Chat / realtime | `app/chat/[id].tsx`, `context/SocketContext.tsx`, `server/index.js` |
@@ -212,7 +228,7 @@ Mobile: **NativeWind** (Tailwind classes on RN components). Base components in `
 
 - **Production cluster**: Remote Minikube on Azure VM at `20.124.131.193`
 - **kubeconfig**: `~/.kube/minikube-azure-config` — always prefix kubectl with `KUBECONFIG=$HOME/.kube/minikube-azure-config kubectl ...`
-- **VPN tunnel**: `npm run vpn` opens SSH tunnel `localhost:8443 → remote:32776` — must be running for kubectl to work
+- **Tailscale**: remote host is accessible as `minikube` via Tailscale (IP `100.73.30.97`) — no SSH tunnel needed
 - **Deploy**: `npm run upload` — builds linux/amd64 images, SCPs to Azure VM, loads into Minikube, syncs SQLite DB, restarts pods
 - **Never** apply manifests with `kubectl apply` alone on this machine without `KUBECONFIG` set — it will attempt localhost:8080 (default kubeconfig = docker-desktop or nothing)
 
@@ -223,4 +239,11 @@ All three must be applied to the remote cluster for photos to work:
 3. `k8s/server-deployment.yaml` — must mount `photos-pvc` at `/app/photos`
 
 ### DB sync behavior
-`npm run upload` copies the local `server/mechanic.db` into the running pod — this **overwrites the remote DB**. Every upload wipes all remote users, appointments, and registrations. The admin user (`admin-1`) must always be present in the local DB before uploading. Consider pulling the remote DB before uploading if there is production data worth keeping.
+- `npm run upload` copies the local `server/mechanic.db` into the running pod — this **overwrites the remote DB**. Every upload wipes all remote users, appointments, and registrations. The admin user (`admin-1`) must always be present in the local DB before uploading. Consider pulling the remote DB before uploading if there is production data worth keeping.
+- `npm run local` runs `scripts/sync-users-from-prod.sh` (downloads prod DB users via SSH → Tailscale), then rebuilds images, then copies the local DB into the running pod and restarts. The pod's PVC at `/app/db` overrides the image's DB — always copy after restart.
+- `scripts/sync-users-from-prod.sh` skips `admin-1` and `mech-1` (local seed accounts). Uses explicit column list for `users` INSERT to handle schema diff (prod may lack `firebaseUid` column).
+
+### Admin portal login (`server/dao/UserDAO.js` `getByPhone`)
+- `getByPhone` normalizes the input phone to 10 digits, then queries with two OR conditions: exact match AND `'1' || phone` (11-digit with country code).
+- Uses `ORDER BY CASE WHEN ... = '1' || ? THEN 0 ELSE 1 END LIMIT 1` to prefer the 11-digit match — prevents `(000) 000-0000` from matching before `+10000000000` (admin-1).
+- `db.get` call passes **3 params**: `[cleanedPhone, cleanedPhone, cleanedPhone]` matching the 3 `?` placeholders (2 in WHERE + 1 in ORDER BY CASE).

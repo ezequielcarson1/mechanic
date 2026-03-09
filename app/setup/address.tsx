@@ -190,7 +190,7 @@ export default function AddressScreen() {
                             handleChange('zip', cleaned);
                         }}
                         containerClassName="bg-blue-50/50 border-0 h-12"
-                        keyboardType="numeric"
+                        keyboardType="number-pad"
                         maxLength={5}
                     />
                 </View>

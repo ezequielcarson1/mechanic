@@ -6,7 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Camera, CheckCircle2 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function PersonalInfoScreen() {
     const router = useRouter();
@@ -174,7 +174,16 @@ export default function PersonalInfoScreen() {
     }
 
     return (
-        <ScrollView className="flex-1 bg-white px-6 pt-6">
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
+        <ScrollView
+            className="flex-1 bg-white px-6 pt-6"
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 200 }}
+        >
             <View className="mb-6">
                 <Text className="text-xl font-outfit-bold text-blue-900 mb-1">Personal information</Text>
                 <Text className="text-blue-500 font-outfit-regular">Complete your information</Text>
@@ -241,6 +250,7 @@ export default function PersonalInfoScreen() {
                         value={formData.dob}
                         onChangeText={(t) => setFormData({ ...formData, dob: t })}
                         containerClassName="bg-blue-50/50 border-blue-100"
+                        keyboardType="number-pad"
                     />
                 </View>
 
@@ -320,7 +330,7 @@ export default function PersonalInfoScreen() {
                                 setFormData({ ...formData, address: { ...formData.address, zip: cleaned } });
                             }}
                             containerClassName="bg-blue-50/50 border-blue-100"
-                            keyboardType="numeric"
+                            keyboardType="number-pad"
                             maxLength={5}
                             placeholder="33139"
                         />
@@ -396,5 +406,6 @@ export default function PersonalInfoScreen() {
                 </View>
             </Modal>
         </ScrollView>
+        </KeyboardAvoidingView>
     );
 }

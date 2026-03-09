@@ -66,6 +66,8 @@ class AssistanceDAO {
             params.push(filters.zip);
         }
 
+        sql += " ORDER BY ar.rowid DESC";
+
         return new Promise((resolve, reject) => {
             db.all(sql, params, (err, rows) => {
                 if (err) reject(err);

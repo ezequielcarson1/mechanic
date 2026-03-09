@@ -24,6 +24,8 @@ class AppointmentDAO {
             params.push(filters.mechanicId);
         }
 
+        sql += " ORDER BY a.rowid DESC";
+
         return new Promise((resolve, reject) => {
             db.all(sql, params, (err, rows) => {
                 if (err) reject(err);

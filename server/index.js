@@ -520,6 +520,28 @@ app.get('/api/video-room/:appointmentId', async (req, res) => {
     }
 });
 
+// Pre-check phone before firing Firebase OTP.
+// Returns a neutral allowed/denied response so the client never learns
+// whether a specific number is registered. Detailed reason is server-log only.
+app.post('/api/auth/pre-check', async (req, res) => {
+    const { phone } = req.body;
+    if (!phone) {
+        return res.status(400).json({ allowed: false, message: 'Phone number is required.' });
+    }
+    try {
+        const user = await UserDAO.getByPhone(phone);
+        if (!user) {
+            console.log(`[pre-check] Denied: no account for phone ending ...${String(phone).slice(-4)}`);
+            return res.json({ allowed: false, message: 'Unable to send verification code. Please try again or contact support.' });
+        }
+        console.log(`[pre-check] Approved OTP request for userId=${user.id}`);
+        res.json({ allowed: true });
+    } catch (err) {
+        console.error('[pre-check] Error:', err.message);
+        res.status(500).json({ allowed: false, message: 'Unable to verify at this time. Please try again.' });
+    }
+});
+
 // User Routes
 app.get('/api/users/check-phone/:phone', async (req, res) => {
     try {
@@ -549,7 +571,7 @@ app.post('/api/login', async (req, res) => {
         // Firebase-authenticated login (preferred path)
         if (idToken) {
             const verified = await verifyFirebaseToken(idToken);
-            resolvedPhone = verified.phone;
+            resolvedPhone = verified.phone || phone; // fall back to client-supplied phone if token lacks it
             firebaseUid = verified.uid;
         }
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "709444677117",
+    "project_id": "my-project-1524418405364",
+    "storage_bucket": "my-project-1524418405364.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709444677117:android:86a4f83d289ef03c67bd94",
+        "android_client_info": {
+          "package_name": "com.darkseed.mechanic"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDE58awL21JKB4blzPYHmm75roqMfwwALs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

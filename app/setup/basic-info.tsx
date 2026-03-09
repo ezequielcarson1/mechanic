@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function BasicInfoScreen() {
     const router = useRouter();
@@ -61,7 +61,11 @@ export default function BasicInfoScreen() {
     };
 
     return (
-        <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+        >
+        <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
             <View className="mb-6">
                 <Text className="text-xl font-outfit-bold text-[#0F172A] mb-1">Basic Info</Text>
                 <Text className="text-[#0047AB] font-outfit-medium text-base">Please enter your information</Text>
@@ -126,7 +130,7 @@ export default function BasicInfoScreen() {
                         value={formData.dob}
                         onChangeText={handleDOBChange}
                         maxLength={14}
-                        keyboardType="numeric"
+                        keyboardType="number-pad"
                         containerClassName="bg-blue-50/50 border-0 h-12"
                     />
                 </View>
@@ -169,5 +173,6 @@ export default function BasicInfoScreen() {
                 Continue
             </Button>
         </ScrollView>
+        </KeyboardAvoidingView>
     );
 }

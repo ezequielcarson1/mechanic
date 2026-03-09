@@ -1,4 +1,4 @@
-import { Edit2, Filter, Shield, Trash2, UserPlus } from 'lucide-react';
+import { Edit2, Filter, Search, Shield, Trash2, UserPlus } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import AddUserModal from '../components/AddUserModal';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
@@ -46,6 +46,7 @@ const UsersPage = () => {
     const [isAddingUser, setIsAddingUser] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [roleFilter, setRoleFilter] = useState<string>('all');
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
         fetchUsers();
@@ -97,6 +98,16 @@ const UsersPage = () => {
         }
     };
 
+    const q = search.toLowerCase().trim();
+    const qDigits = q.replace(/\D/g, '');
+    const filteredUsers = q
+        ? users.filter(u =>
+            `${u.name} ${u.surname}`.toLowerCase().includes(q) ||
+            (u.email || '').toLowerCase().includes(q) ||
+            (qDigits && (u.phone || '').replace(/\D/g, '').includes(qDigits))
+        )
+        : users;
+
     if (loading) return <div className="p-8 text-slate-500 font-medium animate-pulse">Loading users...</div>;
 
     return (
@@ -131,6 +142,16 @@ const UsersPage = () => {
                     <p className="text-slate-400 mt-1">Manage system users, roles, and permissions.</p>
                 </div>
                 <div className="flex items-center space-x-3">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search name, email or phone…"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-9 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-300 text-sm focus:outline-none focus:border-primary-500 w-64"
+                        />
+                    </div>
                     <div className="relative">
                         <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                         <select
@@ -168,7 +189,14 @@ const UsersPage = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800">
-                            {users.map((user) => (
+                            {filteredUsers.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500 text-sm">
+                                        No users match your search.
+                                    </td>
+                                </tr>
+                            )}
+                            {filteredUsers.map((user) => (
                                 <tr key={user.id} className="hover:bg-slate-800/50 transition-colors">
                                     <td className="px-6 py-4 font-mono text-xs text-slate-500">
                                         {user.id.slice(0, 8)}...

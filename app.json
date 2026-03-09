@@ -12,6 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.darkseed.mechanic",
       "googleServicesFile": "./firebase/GoogleService-Info.plist",
+      "entitlements": {
+        "aps-environment": "production"
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
@@ -20,6 +23,7 @@
       }
     },
     "android": {
+      "googleServicesFile": "./firebase/google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/mechanic-icon.png",
@@ -49,6 +53,16 @@
       "expo-router",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      "./plugins/withFirebasePodfile",
+      "./plugins/withFirebaseAuthAPNS",
       [
         "expo-splash-screen",
         {

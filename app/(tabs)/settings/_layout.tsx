@@ -26,6 +26,7 @@ export default function SettingsLayout() {
                 headerShadowVisible: false, // Optional: remove shadow to match design
             }}
         >
+            <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
             <Stack.Screen name="password" options={{ title: 'Account Password' }} />
             <Stack.Screen name="delete-account" options={{ title: 'Delete Account' }} />

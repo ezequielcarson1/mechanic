@@ -15,15 +15,15 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { CancellationModal } from '../../components/appointments/CancellationModal';
-import { MechanicAssistanceInfoTab } from '../../components/appointments/MechanicAssistanceInfoTab';
-import { MechanicBudgetTab } from '../../components/appointments/MechanicBudgetTab';
-import { MechanicClientInfoTab } from '../../components/appointments/MechanicClientInfoTab';
-import { MechanicStatusTab } from '../../components/appointments/MechanicStatusTab';
-import { UserBudgetTab } from '../../components/appointments/UserBudgetTab';
-import { UserMechanicInfoTab } from '../../components/appointments/UserMechanicInfoTab';
-import { UserStatusTab } from '../../components/appointments/UserStatusTab';
-import { UserTrackingTab } from '../../components/appointments/UserTrackingTab';
+import { CancellationModal } from '@/components/appointments/CancellationModal';
+import { MechanicAssistanceInfoTab } from '@/components/appointments/MechanicAssistanceInfoTab';
+import { MechanicBudgetTab } from '@/components/appointments/MechanicBudgetTab';
+import { MechanicClientInfoTab } from '@/components/appointments/MechanicClientInfoTab';
+import { MechanicStatusTab } from '@/components/appointments/MechanicStatusTab';
+import { UserBudgetTab } from '@/components/appointments/UserBudgetTab';
+import { UserMechanicInfoTab } from '@/components/appointments/UserMechanicInfoTab';
+import { UserStatusTab } from '@/components/appointments/UserStatusTab';
+import { UserTrackingTab } from '@/components/appointments/UserTrackingTab';
 
 const { width } = Dimensions.get('window');
 

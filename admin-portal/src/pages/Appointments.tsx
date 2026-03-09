@@ -14,6 +14,7 @@ interface Appointment {
     budget: string;
     status: string;
     type: string;
+    _source: 'appointment' | 'assistance';
     zip?: string;
     userPhone?: string;
     userName?: string;
@@ -43,11 +44,18 @@ const AppointmentsPage = () => {
             ]);
 
             const mergedData = [
-                ...aptResponse.data.map((a: any) => ({ ...a, type: 'Scheduled' })),
+                ...aptResponse.data.map((a: any) => ({
+                    ...a,
+                    _source: 'appointment' as const,
+                    type: a.assistanceType === 'immediate' || a.type === 'immediate'
+                        ? 'Immediate'
+                        : a.assistanceType === 'witness' ? 'Witness' : 'Scheduled',
+                })),
                 ...astResponse.data
                     .filter((ast: any) => !aptResponse.data.some((apt: any) => apt.id === ast.id))
                     .map((a: any) => ({
                         ...a,
+                        _source: 'assistance' as const,
                         type: 'Immediate',
                         status: a.status || 'pending',
                         title: a.title || 'Help!',
@@ -55,8 +63,10 @@ const AppointmentsPage = () => {
                     }))
             ];
 
-            // Sort by date/time (newest first)
-            setAppointments(mergedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+            // Both DAOs return rows ORDER BY rowid DESC (newest first).
+            // Appointments are listed first; assistance-only requests follow.
+            // No additional sort needed — server order is authoritative.
+            setAppointments(mergedData);
         } catch (err) {
             console.error('Failed to fetch appointments', err);
         } finally {
@@ -68,7 +78,7 @@ const AppointmentsPage = () => {
         if (!deletingAppointment) return;
         setIsDeleting(true);
         try {
-            if (deletingAppointment.type === 'Scheduled') {
+            if (deletingAppointment._source === 'appointment') {
                 await AppointmentAPI.delete(deletingAppointment.id);
             } else {
                 await AssistanceAPI.delete(deletingAppointment.id);
