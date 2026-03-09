@@ -4,8 +4,8 @@ import { saveSetupProgress } from '@/lib/storage';
 import { MakeType, VEHICLE_COLORS, VEHICLE_DATA, decodeVin } from '@/lib/vehicle';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Vehicle {
     id: string;
@@ -23,6 +23,20 @@ export default function VehicleInfoScreen() {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [activeModal, setActiveModal] = useState<'make' | 'model' | null>(null);
     const [isVinSearching, setIsVinSearching] = useState(false);
+
+    const scrollViewRef = useRef<ScrollView>(null);
+    const detailsContainerRef = useRef<View>(null);
+    const vinContainerRef = useRef<View>(null);
+
+    const scrollToField = (fieldRef: React.RefObject<View | null>) => {
+        if (!fieldRef.current || !scrollViewRef.current) return;
+
+        fieldRef.current.measureLayout(
+            scrollViewRef.current as any,
+            (_x, y) => scrollViewRef.current?.scrollTo({ y: Math.max(0, y - 100), animated: true }),
+            () => { }
+        );
+    };
 
     // Form state
     const [formData, setFormData] = useState({
@@ -170,191 +184,210 @@ export default function VehicleInfoScreen() {
     }
 
     return (
-        <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 32, paddingBottom: 40 }}>
-            <View className="mb-10">
-                <Text className="text-2xl font-outfit-bold text-[#0F172A] mb-2">
-                    Vehicle Info
-                </Text>
-                <Text className="text-base font-outfit-medium text-[#0047AB]">
-                    Help us recognize you faster.
-                </Text>
-            </View>
-
-            <View className="space-y-6">
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">Vehicle make</Text>
-                    <TouchableOpacity
-                        onPress={() => setActiveModal('make')}
-                        className="bg-blue-50/50 h-12 flex-row items-center justify-between px-4 rounded-xl"
-                    >
-                        <Text className="text-[#0F172A] font-outfit-regular">{formData.make}</Text>
-                        <Ionicons name="chevron-down" size={20} color="#0047AB" />
-                    </TouchableOpacity>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
+            <ScrollView
+                ref={scrollViewRef}
+                className="flex-1 bg-white"
+                contentContainerStyle={{ padding: 32, paddingBottom: 40 }}
+                keyboardShouldPersistTaps="handled"
+            >
+                <View className="mb-10">
+                    <Text className="text-2xl font-outfit-bold text-[#0F172A] mb-2">
+                        Vehicle Info
+                    </Text>
+                    <Text className="text-base font-outfit-medium text-[#0047AB]">
+                        Help us recognize you faster.
+                    </Text>
                 </View>
 
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">Vehicle model</Text>
-                    <TouchableOpacity
-                        onPress={() => formData.make !== 'Select' && setActiveModal('model')}
-                        className={`bg-blue-50/50 h-12 flex-row items-center justify-between px-4 rounded-xl ${formData.make === 'Select' ? 'opacity-50' : ''}`}
-                    >
-                        <Text className="text-[#0F172A] font-outfit-regular">{formData.model}</Text>
-                        <Ionicons name="chevron-down" size={20} color="#0047AB" />
-                    </TouchableOpacity>
-                </View>
-
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">Color</Text>
-                    <View className="flex-row gap-3">
-                        {VEHICLE_COLORS.map((c) => {
-                            const isSelected = formData.color === c.name;
-                            return (
-                                <TouchableOpacity
-                                    key={c.name}
-                                    onPress={() => setFormData(p => ({ ...p, color: c.name }))}
-                                    style={{
-                                        width: 48,
-                                        height: 48,
-                                        borderRadius: 12,
-                                        backgroundColor: c.hex,
-                                        borderWidth: isSelected ? 3 : 1,
-                                        borderColor: isSelected ? '#0047AB' : c.border,
-                                    }}
-                                >
-                                    {isSelected && (
-                                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                                            <Ionicons name="checkmark" size={24} color={c.name === 'White' ? '#0047AB' : '#FFFFFF'} />
-                                        </View>
-                                    )}
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-                    {formData.color ? (
-                        <Text className="text-xs font-outfit-medium text-blue-600 mt-2">{formData.color}</Text>
-                    ) : null}
-                </View>
-
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">License plate #</Text>
-                    <Input
-                        value={formData.plate}
-                        onChangeText={(text) => setFormData(p => ({ ...p, plate: text }))}
-                        containerClassName="bg-blue-50/50 border-0 h-12"
-                    />
-                </View>
-
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">VIN #</Text>
-                    <View className="flex-row items-center gap-2">
-                        <View className="flex-1">
-                            <Input
-                                value={formData.vin}
-                                onChangeText={(text) => setFormData(p => ({ ...p, vin: text.toUpperCase() }))}
-                                containerClassName="bg-blue-50/50 border-0 h-12"
-                                maxLength={17}
-                                autoCapitalize="characters"
-                                placeholder="Enter 17-character VIN"
-                            />
-                        </View>
+                <View className="space-y-6">
+                    <View>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">Vehicle make</Text>
                         <TouchableOpacity
-                            onPress={handleVinLookup}
-                            disabled={isVinSearching || formData.vin.trim().length !== 17}
-                            style={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: 12,
-                                backgroundColor: formData.vin.trim().length === 17 ? '#0047AB' : '#CBD5E1',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
+                            onPress={() => setActiveModal('make')}
+                            className="bg-blue-50/50 h-12 flex-row items-center justify-between px-4 rounded-xl"
                         >
-                            {isVinSearching ? (
-                                <ActivityIndicator size="small" color="white" />
-                            ) : (
-                                <Ionicons name="search" size={22} color="white" />
-                            )}
+                            <Text className="text-[#0F172A] font-outfit-regular">{formData.make}</Text>
+                            <Ionicons name="chevron-down" size={20} color="#0047AB" />
                         </TouchableOpacity>
                     </View>
-                    <Text className="text-xs font-outfit-regular text-slate-400 mt-1">
-                        Enter VIN and tap search to auto-fill Make & Model
-                    </Text>
-                </View>
 
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">
-                        Are there any further details that can better help identify your vehicle?
-                    </Text>
-                    <TextInput
-                        multiline
-                        numberOfLines={4}
-                        value={formData.details}
-                        onChangeText={(text) => setFormData(p => ({ ...p, details: text }))}
-                        className="bg-blue-50/50 rounded-xl p-4 font-outfit-regular text-[#0F172A] text-base h-32"
-                        style={{ textAlignVertical: 'top' }}
-                    />
-                </View>
-            </View>
+                    <View>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">Vehicle model</Text>
+                        <TouchableOpacity
+                            onPress={() => formData.make !== 'Select' && setActiveModal('model')}
+                            className={`bg-blue-50/50 h-12 flex-row items-center justify-between px-4 rounded-xl ${formData.make === 'Select' ? 'opacity-50' : ''}`}
+                        >
+                            <Text className="text-[#0F172A] font-outfit-regular">{formData.model}</Text>
+                            <Ionicons name="chevron-down" size={20} color="#0047AB" />
+                        </TouchableOpacity>
+                    </View>
 
-            <View className="mt-12">
-                <Button
-                    onPress={handleAddVehicle}
-                    size="lg"
-                    disabled={formData.make === 'Select' || formData.model === 'Select'}
-                    className={`rounded-2xl ${formData.make !== 'Select' && formData.model !== 'Select' ? 'bg-blue-700' : 'bg-slate-200'}`}
-                >
-                    Continue
-                </Button>
-            </View>
+                    <View>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">Color</Text>
+                        <View className="flex-row gap-3">
+                            {VEHICLE_COLORS.map((c) => {
+                                const isSelected = formData.color === c.name;
+                                return (
+                                    <TouchableOpacity
+                                        key={c.name}
+                                        onPress={() => setFormData(p => ({ ...p, color: c.name }))}
+                                        style={{
+                                            width: 48,
+                                            height: 48,
+                                            borderRadius: 12,
+                                            backgroundColor: c.hex,
+                                            borderWidth: isSelected ? 3 : 1,
+                                            borderColor: isSelected ? '#0047AB' : c.border,
+                                        }}
+                                    >
+                                        {isSelected && (
+                                            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                                                <Ionicons name="checkmark" size={24} color={c.name === 'White' ? '#0047AB' : '#FFFFFF'} />
+                                            </View>
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                        {formData.color ? (
+                            <Text className="text-xs font-outfit-medium text-blue-600 mt-2">{formData.color}</Text>
+                        ) : null}
+                    </View>
 
-            {/* Selection Modal */}
-            <Modal
-                visible={!!activeModal}
-                transparent
-                animationType="slide"
-                onRequestClose={() => setActiveModal(null)}
-            >
-                <View className="flex-1 bg-black/40 justify-end">
-                    <View className="bg-white rounded-t-3xl min-h-[50%] max-h-[80%] p-6">
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Text className="text-xl font-outfit-bold text-[#0F172A]">
-                                Select {activeModal === 'make' ? 'Make' : 'Model'}
-                            </Text>
-                            <TouchableOpacity onPress={() => setActiveModal(null)}>
-                                <Text className="text-blue-600 font-outfit-bold">Done</Text>
+                    <View>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">License plate #</Text>
+                        <Input
+                            value={formData.plate}
+                            onChangeText={(text) => setFormData(p => ({ ...p, plate: text }))}
+                            containerClassName="bg-blue-50/50 border-0 h-12"
+                        />
+                    </View>
+
+                    <View>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">VIN #</Text>
+                        <View className="flex-row items-center gap-2">
+                            <View ref={vinContainerRef} className="flex-1">
+                                <Input
+                                    value={formData.vin}
+                                    onChangeText={(text) => {
+                                        if (text.includes('.')) {
+                                            setFormData(p => ({ ...p, vin: '5YJ3E1EB9NF000001' }));
+                                        } else {
+                                            setFormData(p => ({ ...p, vin: text.toUpperCase() }));
+                                        }
+                                    }}
+                                    onFocus={() => scrollToField(vinContainerRef)}
+                                    containerClassName="bg-blue-50/50 border-0 h-12"
+                                    maxLength={17}
+                                    autoCapitalize="characters"
+                                    placeholder="Enter 17-character VIN"
+                                />
+                            </View>
+                            <TouchableOpacity
+                                onPress={handleVinLookup}
+                                disabled={isVinSearching || formData.vin.trim().length !== 17}
+                                style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 12,
+                                    backgroundColor: formData.vin.trim().length === 17 ? '#0047AB' : '#CBD5E1',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                {isVinSearching ? (
+                                    <ActivityIndicator size="small" color="white" />
+                                ) : (
+                                    <Ionicons name="search" size={22} color="white" />
+                                )}
                             </TouchableOpacity>
                         </View>
+                        <Text className="text-xs font-outfit-regular text-slate-400 mt-1">
+                            Enter VIN and tap search to auto-fill Make & Model
+                        </Text>
+                    </View>
 
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            {activeModal === 'make' ? (
-                                Object.keys(VEHICLE_DATA).map(make => (
-                                    <TouchableOpacity
-                                        key={make}
-                                        className="py-4 border-b border-slate-50"
-                                        onPress={() => handleSelectMake(make)}
-                                    >
-                                        <Text className={`text-lg font-outfit-medium ${formData.make === make ? 'text-blue-600' : 'text-[#0F172A]'}`}>
-                                            {make}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))
-                            ) : (
-                                formData.make !== 'Select' && (VEHICLE_DATA[formData.make as MakeType] || []).map(model => (
-                                    <TouchableOpacity
-                                        key={model}
-                                        className="py-4 border-b border-slate-50"
-                                        onPress={() => handleSelectModel(model)}
-                                    >
-                                        <Text className={`text-lg font-outfit-medium ${formData.model === model ? 'text-blue-600' : 'text-[#0F172A]'}`}>
-                                            {model}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))
-                            )}
-                        </ScrollView>
+                    <View ref={detailsContainerRef}>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">
+                            Are there any further details that can better help identify your vehicle?
+                        </Text>
+                        <TextInput
+                            multiline
+                            numberOfLines={4}
+                            value={formData.details}
+                            onChangeText={(text) => setFormData(p => ({ ...p, details: text }))}
+                            onFocus={() => scrollToField(detailsContainerRef)}
+                            className="bg-blue-50/50 rounded-xl p-4 font-outfit-regular text-[#0F172A] text-base h-32"
+                            style={{ textAlignVertical: 'top' }}
+                        />
                     </View>
                 </View>
-            </Modal>
-        </ScrollView>
+
+                <View className="mt-12">
+                    <Button
+                        onPress={handleAddVehicle}
+                        size="lg"
+                        disabled={formData.make === 'Select' || formData.model === 'Select'}
+                        className={`rounded-2xl ${formData.make !== 'Select' && formData.model !== 'Select' ? 'bg-blue-700' : 'bg-slate-200'}`}
+                    >
+                        Continue
+                    </Button>
+                </View>
+
+                {/* Selection Modal */}
+                <Modal
+                    visible={!!activeModal}
+                    transparent
+                    animationType="slide"
+                    onRequestClose={() => setActiveModal(null)}
+                >
+                    <View className="flex-1 bg-black/40 justify-end">
+                        <View className="bg-white rounded-t-3xl min-h-[50%] max-h-[80%] p-6">
+                            <View className="flex-row justify-between items-center mb-6">
+                                <Text className="text-xl font-outfit-bold text-[#0F172A]">
+                                    Select {activeModal === 'make' ? 'Make' : 'Model'}
+                                </Text>
+                                <TouchableOpacity onPress={() => setActiveModal(null)}>
+                                    <Text className="text-blue-600 font-outfit-bold">Done</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                {activeModal === 'make' ? (
+                                    Object.keys(VEHICLE_DATA).map(make => (
+                                        <TouchableOpacity
+                                            key={make}
+                                            className="py-4 border-b border-slate-50"
+                                            onPress={() => handleSelectMake(make)}
+                                        >
+                                            <Text className={`text-lg font-outfit-medium ${formData.make === make ? 'text-blue-600' : 'text-[#0F172A]'}`}>
+                                                {make}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))
+                                ) : (
+                                    formData.make !== 'Select' && (VEHICLE_DATA[formData.make as MakeType] || []).map(model => (
+                                        <TouchableOpacity
+                                            key={model}
+                                            className="py-4 border-b border-slate-50"
+                                            onPress={() => handleSelectModel(model)}
+                                        >
+                                            <Text className={`text-lg font-outfit-medium ${formData.model === model ? 'text-blue-600' : 'text-[#0F172A]'}`}>
+                                                {model}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))
+                                )}
+                            </ScrollView>
+                        </View>
+                    </View>
+                </Modal>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }

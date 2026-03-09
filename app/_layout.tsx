@@ -13,6 +13,9 @@ LogBox.ignoreLogs([
   'SafeAreaView has been deprecated',
   // ConfigService bootstrap fetch fails in dev/offline — fallback handles it
   '[ConfigService] Could not fetch remote bootstrap config',
+  // Firebase Auth internal console warnings
+  '[FirebaseAuth]',
+  /\[FirebaseAuth\]/,
 ]);
 
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';

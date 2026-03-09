@@ -1,5 +1,5 @@
-import { firebaseSignOut } from '@/lib/firebase/auth';
 import { userDAO } from '@/lib/dao/UserDAO';
+import { firebaseSignOut } from '@/lib/firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
@@ -34,7 +34,7 @@ interface UserContextType {
     user: UserData | null;
     isLoading: boolean;
     /** Pass the Firebase ID token obtained after OTP verification */
-    login: (firebaseIdToken: string) => Promise<boolean>;
+    login: (firebaseIdToken: string, phone?: string) => Promise<boolean>;
     logout: () => Promise<void>;
     updateUser: (updates: Partial<UserData>, syncToBackend?: boolean) => Promise<void>;
 }

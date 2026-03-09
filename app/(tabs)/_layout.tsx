@@ -7,7 +7,7 @@ import { Image, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-function UserHeaderRight() {
+export function UserHeaderRight() {
   const router = useRouter();
   const { user } = useUser();
 
@@ -86,7 +86,8 @@ export default function TabLayout() {
         options={{
           title: 'Assist',
           tabBarIcon: ({ color }) => <LifeBuoy size={24} color={color} />,
-          headerShown: false, // inner Stack manages its own headers
+          headerLeft: () => null,
+          headerRight: () => <UserHeaderRight />,
         }}
       />
       <Tabs.Screen
@@ -94,7 +95,8 @@ export default function TabLayout() {
         options={{
           title: 'Appointments',
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
-          headerShown: false, // inner Stack manages headers
+          headerLeft: () => null,
+          headerRight: () => <UserHeaderRight />,
         }}
       />
       <Tabs.Screen
@@ -103,6 +105,7 @@ export default function TabLayout() {
           title: 'Notifications',
           tabBarIcon: ({ color }) => <Bell size={24} color={color} />,
           headerLeft: () => null,
+          headerRight: () => <UserHeaderRight />,
         }}
       />
 

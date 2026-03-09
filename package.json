@@ -14,7 +14,7 @@
     "upload_all": "UPLOAD_ALL=true bash ./scripts/upload.sh",
     "vpn": "echo '🔌 Opening SSH tunnel to Azure Minikube K8s API (localhost:8443 → remote:32776)...' && echo '   Press Ctrl+C to disconnect.' && ssh -N -L 8443:127.0.0.1:32776 usuarioifx1@20.124.131.193",
     "local": "bash ./scripts/local-deploy.sh",
-    "testflight": "eas build --platform ios --profile production --non-interactive && eas submit --platform ios --profile production --non-interactive",
+    "testflight": "eas build --platform ios --profile production --non-interactive && eas submit --platform ios --profile production --latest",
     "test:e2e": "npx playwright test",
     "test:e2e:headed": "npx playwright test --headed",
     "test:e2e:report": "npx playwright show-report e2e/report"

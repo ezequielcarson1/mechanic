@@ -4,7 +4,7 @@ import { saveSetupProgress } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function BasicInfoScreen() {
@@ -18,6 +18,21 @@ export default function BasicInfoScreen() {
         confirmPassword: '',
         profileImage: '' as string | null
     });
+
+    const scrollViewRef = useRef<ScrollView>(null);
+    const dobContainerRef = useRef<View>(null);
+    const passwordContainerRef = useRef<View>(null);
+    const confirmPasswordContainerRef = useRef<View>(null);
+
+    const scrollToField = (fieldRef: React.RefObject<View | null>) => {
+        if (!fieldRef.current || !scrollViewRef.current) return;
+
+        fieldRef.current.measureLayout(
+            scrollViewRef.current as any,
+            (_x, y) => scrollViewRef.current?.scrollTo({ y: Math.max(0, y - 100), animated: true }),
+            () => { }
+        );
+    };
 
     const formatDOB = (text: string) => {
         const cleaned = text.replace(/\D/g, '');
@@ -65,114 +80,122 @@ export default function BasicInfoScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1 }}
         >
-        <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 24, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-            <View className="mb-6">
-                <Text className="text-xl font-outfit-bold text-[#0F172A] mb-1">Basic Info</Text>
-                <Text className="text-[#0047AB] font-outfit-medium text-base">Please enter your information</Text>
-            </View>
+            <ScrollView
+                ref={scrollViewRef}
+                className="flex-1 bg-white"
+                contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+                keyboardShouldPersistTaps="handled"
+            >
+                <View className="mb-6">
+                    <Text className="text-xl font-outfit-bold text-[#0F172A] mb-1">Basic Info</Text>
+                    <Text className="text-[#0047AB] font-outfit-medium text-base">Please enter your information</Text>
+                </View>
 
-            {/* Profile Photo */}
-            <View className="flex-row items-center mb-8">
-                <TouchableOpacity
-                    onPress={pickImage}
-                    className="w-24 h-24 bg-blue-50 rounded-full items-center justify-center border-2 border-dashed border-blue-200 mr-4 relative overflow-hidden"
-                >
-                    {formData.profileImage ? (
-                        <Image source={{ uri: formData.profileImage }} className="w-full h-full" />
-                    ) : (
-                        <Ionicons name="camera" size={32} color="#0047AB" style={{ opacity: 0.5 }} />
-                    )}
-                    <View className="absolute bottom-1 right-1 bg-white rounded-full p-1.5 border border-blue-100 shadow-sm">
-                        <Ionicons name="pencil" size={12} color="#0047AB" />
+                {/* Profile Photo */}
+                <View className="flex-row items-center mb-8">
+                    <TouchableOpacity
+                        onPress={pickImage}
+                        className="w-24 h-24 bg-blue-50 rounded-full items-center justify-center border-2 border-dashed border-blue-200 mr-4 relative overflow-hidden"
+                    >
+                        {formData.profileImage ? (
+                            <Image source={{ uri: formData.profileImage }} className="w-full h-full" />
+                        ) : (
+                            <Ionicons name="camera" size={32} color="#0047AB" style={{ opacity: 0.5 }} />
+                        )}
+                        <View className="absolute bottom-1 right-1 bg-white rounded-full p-1.5 border border-blue-100 shadow-sm">
+                            <Ionicons name="pencil" size={12} color="#0047AB" />
+                        </View>
+                    </TouchableOpacity>
+                    <View>
+                        <Text className="font-outfit-bold text-[#0F172A] text-lg">Profile Photo</Text>
+                        <Text className="font-outfit-regular text-slate-400 text-sm">Update your avatar</Text>
                     </View>
-                </TouchableOpacity>
-                <View>
-                    <Text className="font-outfit-bold text-[#0F172A] text-lg">Profile Photo</Text>
-                    <Text className="font-outfit-regular text-slate-400 text-sm">Update your avatar</Text>
-                </View>
-            </View>
-
-            {/* Model-based inputs with labels */}
-            <View className="space-y-4 mb-6">
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">Name</Text>
-                    <Input
-                        value={formData.name}
-                        onChangeText={(text) => setFormData(p => ({ ...p, name: text }))}
-                        containerClassName="bg-blue-50/50 border-0 h-12"
-                    />
                 </View>
 
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">Surname</Text>
-                    <Input
-                        value={formData.surname}
-                        onChangeText={(text) => setFormData(p => ({ ...p, surname: text }))}
-                        containerClassName="bg-blue-50/50 border-0 h-12"
-                    />
-                </View>
-
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">email</Text>
-                    <Input
-                        value={formData.email}
-                        onChangeText={(text) => setFormData(p => ({ ...p, email: text }))}
-                        containerClassName="bg-blue-50/50 border-0 h-12"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                    />
-                </View>
-
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">Date of birth</Text>
-                    <Input
-                        placeholder="MM / DD / YYYY"
-                        value={formData.dob}
-                        onChangeText={handleDOBChange}
-                        maxLength={14}
-                        keyboardType="number-pad"
-                        containerClassName="bg-blue-50/50 border-0 h-12"
-                    />
-                </View>
-
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">Account Password</Text>
-                    <View className="relative">
+                {/* Model-based inputs with labels */}
+                <View className="space-y-4 mb-6">
+                    <View>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">Name</Text>
                         <Input
-                            value={formData.password}
-                            onChangeText={(text) => setFormData(p => ({ ...p, password: text }))}
+                            value={formData.name}
+                            onChangeText={(text) => setFormData(p => ({ ...p, name: text }))}
+                            containerClassName="bg-blue-50/50 border-0 h-12"
+                        />
+                    </View>
+
+                    <View>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">Surname</Text>
+                        <Input
+                            value={formData.surname}
+                            onChangeText={(text) => setFormData(p => ({ ...p, surname: text }))}
+                            containerClassName="bg-blue-50/50 border-0 h-12"
+                        />
+                    </View>
+
+                    <View>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">email</Text>
+                        <Input
+                            value={formData.email}
+                            onChangeText={(text) => setFormData(p => ({ ...p, email: text }))}
+                            containerClassName="bg-blue-50/50 border-0 h-12"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                    </View>
+
+                    <View ref={dobContainerRef}>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">Date of birth</Text>
+                        <Input
+                            placeholder="MM / DD / YYYY"
+                            value={formData.dob}
+                            onChangeText={handleDOBChange}
+                            onFocus={() => scrollToField(dobContainerRef)}
+                            maxLength={14}
+                            keyboardType="number-pad"
+                            containerClassName="bg-blue-50/50 border-0 h-12"
+                        />
+                    </View>
+
+                    <View ref={passwordContainerRef}>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">Account Password</Text>
+                        <View className="relative">
+                            <Input
+                                value={formData.password}
+                                onChangeText={(text) => setFormData(p => ({ ...p, password: text }))}
+                                onFocus={() => scrollToField(passwordContainerRef)}
+                                containerClassName="bg-blue-50/50 border-0 h-12"
+                                isPassword={true}
+                            />
+                        </View>
+                    </View>
+
+                    <View ref={confirmPasswordContainerRef}>
+                        <Text className="font-outfit-medium text-[#0F172A] mb-2">Confirm Password</Text>
+                        <Input
+                            value={formData.confirmPassword}
+                            onChangeText={(text) => setFormData(p => ({ ...p, confirmPassword: text }))}
+                            onFocus={() => scrollToField(confirmPasswordContainerRef)}
                             containerClassName="bg-blue-50/50 border-0 h-12"
                             isPassword={true}
                         />
                     </View>
                 </View>
 
-                <View>
-                    <Text className="font-outfit-medium text-[#0F172A] mb-2">Confirm Password</Text>
-                    <Input
-                        value={formData.confirmPassword}
-                        onChangeText={(text) => setFormData(p => ({ ...p, confirmPassword: text }))}
-                        containerClassName="bg-blue-50/50 border-0 h-12"
-                        isPassword={true}
-                    />
+                {/* Password Requirements */}
+                <View className="mb-8 pl-2">
+                    <Text className="text-gray-600 font-outfit-regular text-sm mb-1">• Must not contain your name or email.</Text>
+                    <Text className="text-gray-600 font-outfit-regular text-sm mb-1">• At least 8 characters.</Text>
+                    <Text className="text-gray-600 font-outfit-regular text-sm">• Contains a symbol or a number</Text>
                 </View>
-            </View>
 
-            {/* Password Requirements */}
-            <View className="mb-8 pl-2">
-                <Text className="text-gray-600 font-outfit-regular text-sm mb-1">• Must not contain your name or email.</Text>
-                <Text className="text-gray-600 font-outfit-regular text-sm mb-1">• At least 8 characters.</Text>
-                <Text className="text-gray-600 font-outfit-regular text-sm">• Contains a symbol or a number</Text>
-            </View>
-
-            <Button
-                onPress={handleContinue}
-                size="lg"
-                className="bg-blue-700 rounded-xl"
-            >
-                Continue
-            </Button>
-        </ScrollView>
+                <Button
+                    onPress={handleContinue}
+                    size="lg"
+                    className="bg-blue-700 rounded-xl"
+                >
+                    Continue
+                </Button>
+            </ScrollView>
         </KeyboardAvoidingView>
     );
 }

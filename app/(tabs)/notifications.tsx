@@ -1,6 +1,6 @@
 import { useNotifications } from '@/context/NotificationsContext';
 import { useRouter } from 'expo-router';
-import { Check, ChevronLeft, MoreHorizontal, X } from 'lucide-react-native';
+import { Check, MoreHorizontal, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { Alert, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
@@ -54,14 +54,6 @@ export default function NotificationsScreen() {
 
     return (
         <View className="flex-1 bg-white">
-            {/* Header */}
-            <View className="flex-row items-center px-4 py-4 border-b border-gray-50">
-                <TouchableOpacity onPress={() => router.back()} className="p-1">
-                    <ChevronLeft size={24} color="#0047AB" />
-                </TouchableOpacity>
-                <Text className="flex-1 text-center text-blue-900 font-outfit-bold text-lg mr-6">Notifications</Text>
-            </View>
-
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <View className="px-6 py-6">
                     <Text className="text-blue-900 font-outfit-bold text-2xl">Notification center</Text>

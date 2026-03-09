@@ -1,20 +1,3 @@
-import { useAppointments } from '@/context/AppointmentsContext';
-import { useUser } from '@/context/UserContext';
-import { userDAO } from '@/lib/dao/UserDAO';
-import { Ionicons } from '@expo/vector-icons';
-import { useGlobalSearchParams, useRouter } from 'expo-router';
-import {
-    ChevronLeft
-} from 'lucide-react-native';
-import React from 'react';
-import {
-    Dimensions,
-    Image,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View
-} from 'react-native';
 import { CancellationModal } from '@/components/appointments/CancellationModal';
 import { MechanicAssistanceInfoTab } from '@/components/appointments/MechanicAssistanceInfoTab';
 import { MechanicBudgetTab } from '@/components/appointments/MechanicBudgetTab';
@@ -24,6 +7,20 @@ import { UserBudgetTab } from '@/components/appointments/UserBudgetTab';
 import { UserMechanicInfoTab } from '@/components/appointments/UserMechanicInfoTab';
 import { UserStatusTab } from '@/components/appointments/UserStatusTab';
 import { UserTrackingTab } from '@/components/appointments/UserTrackingTab';
+import { useAppointments } from '@/context/AppointmentsContext';
+import { useUser } from '@/context/UserContext';
+import { userDAO } from '@/lib/dao/UserDAO';
+import { Ionicons } from '@expo/vector-icons';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
+import React from 'react';
+import {
+    Dimensions,
+    Image,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -262,25 +259,6 @@ export default function AppointmentDetailScreen() {
                 <View><Text>Cancellation Feedback Placeholder</Text></View>
             ) : (
                 <View className="flex-1">
-                    {/* Header */}
-                    <View className="bg-white px-4 pt-12 pb-2 flex-row items-center justify-between" testID="detail-header" nativeID="detail-header">
-                        <TouchableOpacity
-                            onPress={() => router.back()}
-                            testID="back-button"
-                            hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-                        >
-                            <ChevronLeft size={24} color="#0047AB" />
-                        </TouchableOpacity>
-                        <Text className="font-outfit-bold text-lg text-blue-900" testID="header-title" nativeID="header-title">Assistance</Text>
-                        {isUserRole ? (
-                            <TouchableOpacity onPress={() => router.replace('/(tabs)/appointments')}>
-                                <Text className="text-blue-600 font-outfit-medium text-sm">Main Menu</Text>
-                            </TouchableOpacity>
-                        ) : (
-                            <View style={{ width: 24 }} />
-                        )}
-                    </View>
-
                     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                         {/* Title Section */}
                         <View className="px-6 py-4">

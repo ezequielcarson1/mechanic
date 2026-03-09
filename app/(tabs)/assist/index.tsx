@@ -89,13 +89,20 @@ export default function AssistFeedScreen() {
         );
     }
 
-    const filteredRequests = filter
-        ? requests.filter(req => {
+    // Exclude any requests that are already in the user's active appointments list
+    const filteredRequests = requests.filter(req => {
+        // If the user currently has this request locally as an active appointment, hide it from the Assist feed
+        const isAlreadyAppointment = appointments.some(appt => appt.id === req.id && appt.status !== 'canceled');
+        if (isAlreadyAppointment) return false;
+
+        // Otherwise apply the selected visual filter
+        if (filter) {
             if (filter === 'witness') return req.assistanceType === 'witness' || req.type === 'witness';
             if (filter === 'immediate') return req.type === 'immediate' && req.assistanceType !== 'witness';
             return req.type === filter;
-        })
-        : requests;
+        }
+        return true;
+    });
 
     const FilterIcon = ({ type, icon: Icon, label, color }: { type: AssistanceType, icon: any, label: string, color: string }) => (
         <TouchableOpacity

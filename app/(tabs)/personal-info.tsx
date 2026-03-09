@@ -5,7 +5,7 @@ import { US_STATES, normalizeStreet } from '@/lib/address';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Camera, CheckCircle2 } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function PersonalInfoScreen() {
@@ -15,6 +15,22 @@ export default function PersonalInfoScreen() {
     const [showStateModal, setShowStateModal] = useState(false);
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+
+    const scrollViewRef = useRef<ScrollView>(null);
+    const streetContainerRef = useRef<View>(null);
+    const apartmentContainerRef = useRef<View>(null);
+    const cityContainerRef = useRef<View>(null);
+    const zipContainerRef = useRef<View>(null);
+
+    const scrollToField = (fieldRef: React.RefObject<View | null>) => {
+        if (!fieldRef.current || !scrollViewRef.current) return;
+
+        fieldRef.current.measureLayout(
+            scrollViewRef.current as any,
+            (_x, y) => scrollViewRef.current?.scrollTo({ y: Math.max(0, y - 24), animated: true }),
+            () => { }
+        );
+    };
     const [formData, setFormData] = useState({
         name: user?.name || '',
         surname: user?.surname || '',
@@ -179,233 +195,238 @@ export default function PersonalInfoScreen() {
             style={{ flex: 1 }}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
-        <ScrollView
-            className="flex-1 bg-white px-6 pt-6"
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: 200 }}
-        >
-            <View className="mb-6">
-                <Text className="text-xl font-outfit-bold text-blue-900 mb-1">Personal information</Text>
-                <Text className="text-blue-500 font-outfit-regular">Complete your information</Text>
-            </View>
-
-            {/* Profile Image Section */}
-            <View className="items-center mb-8">
-                <TouchableOpacity onPress={pickImage} className="relative">
-                    <View className="w-24 h-24 bg-gray-100 rounded-full justify-center items-center border border-gray-200 overflow-hidden">
-                        {formData.profileImage ? (
-                            <Image source={{ uri: formData.profileImage }} className="w-full h-full" />
-                        ) : (
-                            <Camera size={32} color="#D1D5DB" />
-                        )}
-                    </View>
-                    <View className="absolute bottom-0 right-0 bg-blue-100 p-1.5 rounded-full border border-white">
-                        <Text className="text-xs">✏️</Text>
-                    </View>
-                </TouchableOpacity>
-                <Text className="text-gray-500 font-outfit-regular mt-2 text-xs">Tap to change photo</Text>
-            </View>
-
-            <View className="gap-4 mb-8">
-                <View>
-                    <Text className="font-outfit-medium mb-2 text-gray-900">Name</Text>
-                    <Input
-                        value={formData.name}
-                        onChangeText={(t) => setFormData({ ...formData, name: t })}
-                        containerClassName="bg-blue-50/50 border-blue-100"
-                    />
+            <ScrollView
+                ref={scrollViewRef}
+                className="flex-1 bg-white px-6 pt-6"
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ paddingBottom: 40 }}
+            >
+                <View className="mb-6">
+                    <Text className="text-xl font-outfit-bold text-blue-900 mb-1">Personal information</Text>
+                    <Text className="text-blue-500 font-outfit-regular">Complete your information</Text>
                 </View>
 
-                <View>
-                    <Text className="font-outfit-medium mb-2 text-gray-900">Surname</Text>
-                    <Input
-                        value={formData.surname}
-                        onChangeText={(t) => setFormData({ ...formData, surname: t })}
-                        containerClassName="bg-blue-50/50 border-blue-100"
-                    />
+                {/* Profile Image Section */}
+                <View className="items-center mb-8">
+                    <TouchableOpacity onPress={pickImage} className="relative">
+                        <View className="w-24 h-24 bg-gray-100 rounded-full justify-center items-center border border-gray-200 overflow-hidden">
+                            {formData.profileImage ? (
+                                <Image source={{ uri: formData.profileImage }} className="w-full h-full" />
+                            ) : (
+                                <Camera size={32} color="#D1D5DB" />
+                            )}
+                        </View>
+                        <View className="absolute bottom-0 right-0 bg-blue-100 p-1.5 rounded-full border border-white">
+                            <Text className="text-xs">✏️</Text>
+                        </View>
+                    </TouchableOpacity>
+                    <Text className="text-gray-500 font-outfit-regular mt-2 text-xs">Tap to change photo</Text>
                 </View>
 
-                <View>
-                    <Text className="font-outfit-medium mb-2 text-gray-900">email</Text>
-                    <Input
-                        value={formData.email}
-                        onChangeText={(t) => setFormData({ ...formData, email: t })}
-                        containerClassName="bg-blue-50/50 border-blue-100"
-                        keyboardType="email-address"
-                    />
-                </View>
-
-                <View>
-                    <Text className="font-outfit-medium mb-2 text-gray-900">Phone number</Text>
-                    <Input
-                        value={formData.phone}
-                        editable={false}
-                        containerClassName="bg-gray-100 border-gray-200 text-gray-500"
-                    />
-                </View>
-
-                <View>
-                    <Text className="font-outfit-medium mb-2 text-gray-900">Date of birth</Text>
-                    <Input
-                        value={formData.dob}
-                        onChangeText={(t) => setFormData({ ...formData, dob: t })}
-                        containerClassName="bg-blue-50/50 border-blue-100"
-                        keyboardType="number-pad"
-                    />
-                </View>
-
-                {/* Address Section */}
-                <View className="mt-4">
-                    <Text className="text-lg font-outfit-bold text-blue-900 mb-4">Address Information</Text>
-
-                    <View className="mb-4 relative z-50">
-                        <Text className="font-outfit-medium mb-2 text-gray-900">Street</Text>
+                <View className="gap-4 mb-8">
+                    <View>
+                        <Text className="font-outfit-medium mb-2 text-gray-900">Name</Text>
                         <Input
-                            value={formData.address.street}
-                            onChangeText={(t) => {
-                                setFormData({ ...formData, address: { ...formData.address, street: t } });
-                                searchAddress(t);
-                            }}
-                            containerClassName="bg-blue-50/50 border-blue-100"
-                            placeholder="Enter street address"
-                        />
-                        {isSearching && (
-                            <ActivityIndicator size="small" color="#0047AB" className="absolute right-4 top-10" />
-                        )}
-
-                        {searchSuggestions.length > 0 && (
-                            <View className="absolute top-[80px] left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
-                                {searchSuggestions.map((suggestion, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        className="px-4 py-3 border-b border-gray-50 flex-col"
-                                        onPress={() => handleSelectAddress(suggestion)}
-                                    >
-                                        <Text className="font-outfit-medium text-gray-900 text-sm" numberOfLines={1}>
-                                            {getFormattedAddress(suggestion)}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        )}
-                    </View>
-
-                    <View className="mb-4">
-                        <Text className="font-outfit-medium mb-2 text-gray-900">Apartment / Suite</Text>
-                        <Input
-                            value={formData.address.apartment}
-                            onChangeText={(t) => setFormData({ ...formData, address: { ...formData.address, apartment: t } })}
+                            value={formData.name}
+                            onChangeText={(t) => setFormData({ ...formData, name: t })}
                             containerClassName="bg-blue-50/50 border-blue-100"
                         />
-                    </View>
-
-                    <View className="flex-row gap-4 mb-4">
-                        <View className="flex-1">
-                            <Text className="font-outfit-medium mb-2 text-gray-900">City</Text>
-                            <Input
-                                value={formData.address.city}
-                                onChangeText={(t) => setFormData({ ...formData, address: { ...formData.address, city: t } })}
-                                containerClassName="bg-blue-50/50 border-blue-100"
-                            />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="font-outfit-medium mb-2 text-gray-900">State</Text>
-                            <TouchableOpacity
-                                onPress={() => setShowStateModal(true)}
-                                className="bg-blue-50/50 border border-blue-100 rounded-xl h-[52px] justify-center px-4"
-                            >
-                                <Text className={`font-outfit-medium ${formData.address.state ? 'text-gray-900' : 'text-gray-400'}`}>
-                                    {formData.address.state || 'FL'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
                     </View>
 
                     <View>
-                        <Text className="font-outfit-medium mb-2 text-gray-900">Zip Code</Text>
+                        <Text className="font-outfit-medium mb-2 text-gray-900">Surname</Text>
                         <Input
-                            value={formData.address.zip}
-                            onChangeText={(t) => {
-                                const cleaned = t.replace(/\D/g, '').slice(0, 5);
-                                setFormData({ ...formData, address: { ...formData.address, zip: cleaned } });
-                            }}
+                            value={formData.surname}
+                            onChangeText={(t) => setFormData({ ...formData, surname: t })}
+                            containerClassName="bg-blue-50/50 border-blue-100"
+                        />
+                    </View>
+
+                    <View>
+                        <Text className="font-outfit-medium mb-2 text-gray-900">email</Text>
+                        <Input
+                            value={formData.email}
+                            onChangeText={(t) => setFormData({ ...formData, email: t })}
+                            containerClassName="bg-blue-50/50 border-blue-100"
+                            keyboardType="email-address"
+                        />
+                    </View>
+
+                    <View>
+                        <Text className="font-outfit-medium mb-2 text-gray-900">Phone number</Text>
+                        <Input
+                            value={formData.phone}
+                            editable={false}
+                            containerClassName="bg-gray-100 border-gray-200 text-gray-500"
+                        />
+                    </View>
+
+                    <View>
+                        <Text className="font-outfit-medium mb-2 text-gray-900">Date of birth</Text>
+                        <Input
+                            value={formData.dob}
+                            onChangeText={(t) => setFormData({ ...formData, dob: t })}
                             containerClassName="bg-blue-50/50 border-blue-100"
                             keyboardType="number-pad"
-                            maxLength={5}
-                            placeholder="33139"
                         />
                     </View>
+
+                    {/* Address Section */}
+                    <View className="mt-4">
+                        <Text className="text-lg font-outfit-bold text-blue-900 mb-4">Address Information</Text>
+
+                        <View ref={streetContainerRef} className="mb-4 relative z-50">
+                            <Text className="font-outfit-medium mb-2 text-gray-900">Street</Text>
+                            <Input
+                                value={formData.address.street}
+                                onChangeText={(t) => {
+                                    setFormData({ ...formData, address: { ...formData.address, street: t } });
+                                    searchAddress(t);
+                                }}
+                                onFocus={() => scrollToField(streetContainerRef)}
+                                containerClassName="bg-blue-50/50 border-blue-100"
+                                placeholder="Enter street address"
+                            />
+                            {isSearching && (
+                                <ActivityIndicator size="small" color="#0047AB" className="absolute right-4 top-10" />
+                            )}
+
+                            {searchSuggestions.length > 0 && (
+                                <View className="absolute top-[80px] left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                                    {searchSuggestions.map((suggestion, index) => (
+                                        <TouchableOpacity
+                                            key={index}
+                                            className="px-4 py-3 border-b border-gray-50 flex-col"
+                                            onPress={() => handleSelectAddress(suggestion)}
+                                        >
+                                            <Text className="font-outfit-medium text-gray-900 text-sm" numberOfLines={1}>
+                                                {getFormattedAddress(suggestion)}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
+
+                        <View ref={apartmentContainerRef} className="mb-4">
+                            <Text className="font-outfit-medium mb-2 text-gray-900">Apartment / Suite</Text>
+                            <Input
+                                value={formData.address.apartment}
+                                onChangeText={(t) => setFormData({ ...formData, address: { ...formData.address, apartment: t } })}
+                                onFocus={() => scrollToField(apartmentContainerRef)}
+                                containerClassName="bg-blue-50/50 border-blue-100"
+                            />
+                        </View>
+
+                        <View ref={cityContainerRef} className="flex-row gap-4 mb-4">
+                            <View className="flex-1">
+                                <Text className="font-outfit-medium mb-2 text-gray-900">City</Text>
+                                <Input
+                                    value={formData.address.city}
+                                    onChangeText={(t) => setFormData({ ...formData, address: { ...formData.address, city: t } })}
+                                    onFocus={() => scrollToField(cityContainerRef)}
+                                    containerClassName="bg-blue-50/50 border-blue-100"
+                                />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="font-outfit-medium mb-2 text-gray-900">State</Text>
+                                <TouchableOpacity
+                                    onPress={() => setShowStateModal(true)}
+                                    className="bg-blue-50/50 border border-blue-100 rounded-xl h-[52px] justify-center px-4"
+                                >
+                                    <Text className={`font-outfit-medium ${formData.address.state ? 'text-gray-900' : 'text-gray-400'}`}>
+                                        {formData.address.state || 'FL'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <View ref={zipContainerRef}>
+                            <Text className="font-outfit-medium mb-2 text-gray-900">Zip Code</Text>
+                            <Input
+                                value={formData.address.zip}
+                                onChangeText={(t) => {
+                                    const cleaned = t.replace(/\D/g, '').slice(0, 5);
+                                    setFormData({ ...formData, address: { ...formData.address, zip: cleaned } });
+                                }}
+                                onFocus={() => scrollToField(zipContainerRef)}
+                                containerClassName="bg-blue-50/50 border-blue-100"
+                                keyboardType="number-pad"
+                                maxLength={5}
+                                placeholder="33139"
+                            />
+                        </View>
+                    </View>
                 </View>
-            </View>
 
-            <Button size="lg" className="mb-10" onPress={handleUpdate}>
-                Update Profile
-            </Button>
+                <Button size="lg" className="mb-10" onPress={handleUpdate}>
+                    Update Profile
+                </Button>
 
-            {/* State Selection Modal */}
-            <Modal
-                visible={showStateModal}
-                transparent
-                animationType="slide"
-                onRequestClose={() => setShowStateModal(false)}
-            >
-                <View className="flex-1 bg-black/50 justify-end">
-                    <View className="bg-white rounded-t-3xl h-2/3">
-                        <View className="p-6 border-b border-gray-100 flex-row justify-between items-center">
-                            <Text className="text-xl font-outfit-bold text-blue-900">Select State</Text>
-                            <TouchableOpacity onPress={() => setShowStateModal(false)}>
-                                <Text className="text-blue-600 font-outfit-bold">Done</Text>
+                {/* State Selection Modal */}
+                <Modal
+                    visible={showStateModal}
+                    transparent
+                    animationType="slide"
+                    onRequestClose={() => setShowStateModal(false)}
+                >
+                    <View className="flex-1 bg-black/50 justify-end">
+                        <View className="bg-white rounded-t-3xl h-2/3">
+                            <View className="p-6 border-b border-gray-100 flex-row justify-between items-center">
+                                <Text className="text-xl font-outfit-bold text-blue-900">Select State</Text>
+                                <TouchableOpacity onPress={() => setShowStateModal(false)}>
+                                    <Text className="text-blue-600 font-outfit-bold">Done</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <FlatList
+                                data={US_STATES}
+                                keyExtractor={(item) => item.code}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        className={`px-6 py-4 border-b border-gray-50 flex-row justify-between items-center ${formData.address.state === item.code ? 'bg-blue-50' : ''}`}
+                                        onPress={() => {
+                                            setFormData({ ...formData, address: { ...formData.address, state: item.code } });
+                                            setShowStateModal(false);
+                                        }}
+                                    >
+                                        <Text className={`text-base font-outfit-medium ${formData.address.state === item.code ? 'text-blue-900' : 'text-gray-800'}`}>
+                                            {item.name}
+                                        </Text>
+                                        <Text className="text-sm font-outfit-bold text-blue-600">{item.code}</Text>
+                                    </TouchableOpacity>
+                                )}
+                            />
+                        </View>
+                    </View>
+                </Modal>
+
+                <Modal
+                    visible={showSuccessModal}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setShowSuccessModal(false)}
+                >
+                    <View className="flex-1 bg-black/50 justify-center items-center px-6">
+                        <View className="bg-white w-full rounded-2xl p-8 items-center">
+                            <View className="w-20 h-20 bg-blue-50 rounded-full items-center justify-center mb-6">
+                                <CheckCircle2 size={48} color="#0047AB" />
+                            </View>
+                            <Text className="text-xl font-outfit-bold text-blue-900 mb-2 text-center">
+                                Success!
+                            </Text>
+                            <Text className="text-gray-500 font-outfit-regular text-center mb-8">
+                                Information was updated
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => setShowSuccessModal(false)}
+                                className="bg-blue-700 w-full py-4 rounded-xl items-center"
+                            >
+                                <Text className="text-white font-outfit-bold text-lg">Close</Text>
                             </TouchableOpacity>
                         </View>
-                        <FlatList
-                            data={US_STATES}
-                            keyExtractor={(item) => item.code}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    className={`px-6 py-4 border-b border-gray-50 flex-row justify-between items-center ${formData.address.state === item.code ? 'bg-blue-50' : ''}`}
-                                    onPress={() => {
-                                        setFormData({ ...formData, address: { ...formData.address, state: item.code } });
-                                        setShowStateModal(false);
-                                    }}
-                                >
-                                    <Text className={`text-base font-outfit-medium ${formData.address.state === item.code ? 'text-blue-900' : 'text-gray-800'}`}>
-                                        {item.name}
-                                    </Text>
-                                    <Text className="text-sm font-outfit-bold text-blue-600">{item.code}</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
                     </View>
-                </View>
-            </Modal>
-
-            <Modal
-                visible={showSuccessModal}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setShowSuccessModal(false)}
-            >
-                <View className="flex-1 bg-black/50 justify-center items-center px-6">
-                    <View className="bg-white w-full rounded-2xl p-8 items-center">
-                        <View className="w-20 h-20 bg-blue-50 rounded-full items-center justify-center mb-6">
-                            <CheckCircle2 size={48} color="#0047AB" />
-                        </View>
-                        <Text className="text-xl font-outfit-bold text-blue-900 mb-2 text-center">
-                            Success!
-                        </Text>
-                        <Text className="text-gray-500 font-outfit-regular text-center mb-8">
-                            Information was updated
-                        </Text>
-                        <TouchableOpacity
-                            onPress={() => setShowSuccessModal(false)}
-                            className="bg-blue-700 w-full py-4 rounded-xl items-center"
-                        >
-                            <Text className="text-white font-outfit-bold text-lg">Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-        </ScrollView>
+                </Modal>
+            </ScrollView>
         </KeyboardAvoidingView>
     );
 }

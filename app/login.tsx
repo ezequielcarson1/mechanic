@@ -4,13 +4,13 @@ import { GradientLayout } from '@/components/ui/GradientLayout';
 import { Input } from '@/components/ui/Input';
 import { NumericKeypad } from '@/components/ui/Keypad';
 import { useUser } from '@/context/UserContext';
-import { sendOTP, verifyOTP, getIdToken } from '@/lib/firebase/auth';
 import { userDAO } from '@/lib/dao/UserDAO';
+import { getIdToken, sendOTP, verifyOTP } from '@/lib/firebase/auth';
 import { getLastPhone, saveLastPhone } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Modal, Image, Keyboard, Platform, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Image, Keyboard, Modal, Platform, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 type Step = 'phone' | 'otp';
 
@@ -85,19 +85,25 @@ export default function LoginScreen() {
             setOtpCode('');
             setStep('otp');
         } catch (err: any) {
-            showError('Error', err.message || 'Failed to send verification code. Please try again.');
+            const rawMessage = err.message || '';
+            const displayMessage = rawMessage.includes('auth/too-many-requests')
+                ? 'Too many login attempts. Please wait a few minutes before trying again.'
+                : rawMessage || 'Failed to send verification code. Please try again.';
+
+            showError('Error', displayMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
     // Step 2: verify OTP, get Firebase ID token, login with backend
-    const handleVerifyOTP = async () => {
-        if (otpCode.length < 6) return;
+    const handleVerifyOTP = async (codeToVerify?: string) => {
+        const currentCode = typeof codeToVerify === 'string' ? codeToVerify : otpCode;
+        if (currentCode.length < 6) return;
 
         setIsLoading(true);
         try {
-            await verifyOTP(otpCode);
+            await verifyOTP(currentCode);
             const idToken = await getIdToken();
             if (!idToken) throw new Error('Failed to get authentication token.');
 
@@ -114,7 +120,12 @@ export default function LoginScreen() {
                 );
             }
         } catch (err: any) {
-            showError('Verification Failed', err.message || 'Invalid code. Please try again.');
+            const rawMessage = err.message || '';
+            const displayMessage = rawMessage.includes('auth/too-many-requests')
+                ? 'Accounts are locked temporarily after too many attempts. Please try again later.'
+                : rawMessage || 'Invalid code. Please try again.';
+
+            showError('Verification Failed', displayMessage);
         } finally {
             setIsLoading(false);
         }
@@ -138,73 +149,79 @@ export default function LoginScreen() {
     const handleOtpAutofill = (text: string) => {
         const digits = text.replace(/\D/g, '').slice(0, 6);
         setOtpCode(digits);
-        if (digits.length === 6) handleVerifyOTP();
+        if (digits.length === 6) {
+            Keyboard.dismiss();
+            handleVerifyOTP(digits);
+        }
     };
 
     return (
         <>
             {/* --- OTP Step UI --- */}
             {step === 'otp' ? (
-                <View className="flex-1 bg-white justify-between">
-                    <View className="px-8 pt-16 flex-1">
-                        <TouchableOpacity onPress={() => setStep('phone')} className="mb-8">
-                            <Ionicons name="arrow-back" size={24} color="#0F172A" />
-                        </TouchableOpacity>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+                    <View className="flex-1 bg-white justify-between">
+                        <View className="px-8 pt-16 flex-1">
+                            <TouchableOpacity onPress={() => setStep('phone')} className="mb-8">
+                                <Ionicons name="arrow-back" size={24} color="#0F172A" />
+                            </TouchableOpacity>
 
-                        <Text className="text-xl font-outfit-bold text-[#0F172A] mb-2">
-                            Enter verification code
-                        </Text>
-                        <Text className="text-base font-outfit-medium text-[#0047AB] mb-12">
-                            Sent to {fullPhoneRef.current}
-                        </Text>
+                            <Text className="text-xl font-outfit-bold text-[#0F172A] mb-2">
+                                Enter verification code
+                            </Text>
+                            <Text className="text-base font-outfit-medium text-[#0047AB] mb-12">
+                                Sent to {fullPhoneRef.current}
+                            </Text>
 
-                        {/* 6-digit display */}
-                        <View className="flex-row justify-between mb-12 px-4">
-                            {[0, 1, 2, 3, 4, 5].map((index) => (
-                                <View
-                                    key={index}
-                                    className="w-10 border-b-2 border-slate-300 items-center pb-2"
-                                >
-                                    <Text className="text-3xl font-outfit-bold text-[#0F172A]">
-                                        {otpCode[index] || ''}
-                                    </Text>
-                                </View>
-                            ))}
+                            {/* 6-digit display */}
+                            <TouchableOpacity
+                                activeOpacity={1}
+                                onPress={() => otpInputRef.current?.focus()}
+                                className="flex-row justify-between mb-12 px-4 relative"
+                            >
+                                {[0, 1, 2, 3, 4, 5].map((index) => (
+                                    <View
+                                        key={index}
+                                        className={`w-10 border-b-2 items-center pb-2 ${otpCode.length === index ? 'border-[#0047AB]' : 'border-slate-300'}`}
+                                    >
+                                        <Text className="text-3xl font-outfit-bold text-[#0F172A]">
+                                            {otpCode[index] || ''}
+                                        </Text>
+                                    </View>
+                                ))}
+
+                                {/* Hidden input — enables OS SMS autofill suggestion above keyboard */}
+                                <TextInput
+                                    ref={otpInputRef}
+                                    value={otpCode}
+                                    onChangeText={handleOtpAutofill}
+                                    keyboardType="number-pad"
+                                    textContentType="oneTimeCode"
+                                    autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
+                                    maxLength={6}
+                                    style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0 }}
+                                    caretHidden={true}
+                                />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={handleSendOTP}
+                                className="mb-6"
+                                disabled={isLoading}
+                            >
+                                <Text className="text-[#0047AB] text-center font-outfit-medium">
+                                    Resend code
+                                </Text>
+                            </TouchableOpacity>
                         </View>
 
-                        <TouchableOpacity
-                            onPress={handleSendOTP}
-                            className="mb-6"
-                            disabled={isLoading}
-                        >
-                            <Text className="text-[#0047AB] text-center font-outfit-medium">
-                                Resend code
-                            </Text>
-                        </TouchableOpacity>
-
-                        {/* Hidden input — enables OS SMS autofill suggestion above keyboard */}
-                        <TextInput
-                            ref={otpInputRef}
-                            value={otpCode}
-                            onChangeText={handleOtpAutofill}
-                            keyboardType="number-pad"
-                            textContentType="oneTimeCode"
-                            autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
-                            maxLength={6}
-                            style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
-                            accessible={false}
-                            importantForAccessibility="no"
-                            aria-hidden
-                            showSoftInputOnFocus={false}
+                        <NumericKeypad
+                            onKeyPress={handleOtpKeyPress}
+                            onDelete={handleOtpDelete}
+                            onSubmit={() => handleVerifyOTP()}
                         />
                     </View>
-
-                    <NumericKeypad
-                        onKeyPress={handleOtpKeyPress}
-                        onDelete={handleOtpDelete}
-                        onSubmit={handleVerifyOTP}
-                    />
-                </View>
+                </TouchableWithoutFeedback>
             ) : (
                 /* --- Phone Step UI --- */
                 <View className="flex-1">

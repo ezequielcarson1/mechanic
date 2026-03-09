@@ -5,13 +5,16 @@ import { saveSetupProgress } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, Text, TouchableOpacity, View } from 'react-native';
 
 export default function PhoneNumberScreen() {
     const router = useRouter();
     const [phoneNumber, setPhoneNumber] = useState('');
     const [isChecking, setIsChecking] = useState(false);
-    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorModal, setErrorModal] = useState({ visible: false, title: '', message: '' });
+
+    const showError = (title: string, message: string) => setErrorModal({ visible: true, title, message });
+    const hideError = () => setErrorModal({ visible: false, title: '', message: '' });
 
     const handleKeyPress = (key: string) => {
         if (phoneNumber.length < 10) {
@@ -25,7 +28,7 @@ export default function PhoneNumberScreen() {
 
     const handleSubmit = async () => {
         if (phoneNumber.length < 10) {
-            Alert.alert('Invalid number', 'Please enter a valid 10-digit phone number.');
+            showError('Invalid number', 'Please enter a valid 10-digit phone number.');
             return;
         }
 
@@ -36,7 +39,7 @@ export default function PhoneNumberScreen() {
             // Check if phone already registered in our DB
             const exists = await userDAO.checkPhoneExists(fullPhone);
             if (exists) {
-                setShowErrorModal(true);
+                showError('Account Exists', 'This phone number is already registered. Please log in instead or use a different number.');
                 return;
             }
 
@@ -48,7 +51,12 @@ export default function PhoneNumberScreen() {
 
             router.push('/setup/otp');
         } catch (error: any) {
-            Alert.alert('Error', error.message || 'Something went wrong. Please try again.');
+            const rawMessage = error.message || '';
+            const displayMessage = rawMessage.includes('auth/too-many-requests')
+                ? 'Too many login attempts. Please wait a few minutes and try again later.'
+                : rawMessage || 'Something went wrong. Please try again.';
+
+            showError('Error', displayMessage);
         } finally {
             setIsChecking(false);
         }
@@ -103,12 +111,12 @@ export default function PhoneNumberScreen() {
                 onSubmit={handleSubmit}
             />
 
-            {/* Error Modal — phone already registered */}
+            {/* Error Modal */}
             <Modal
-                visible={showErrorModal}
+                visible={errorModal.visible}
                 transparent
                 animationType="fade"
-                onRequestClose={() => setShowErrorModal(false)}
+                onRequestClose={hideError}
             >
                 <View className="flex-1 bg-black/40 justify-center items-center px-6">
                     <View className="bg-white rounded-3xl w-full p-8 items-center shadow-xl">
@@ -117,16 +125,16 @@ export default function PhoneNumberScreen() {
                         </View>
 
                         <Text className="text-xl font-outfit-bold text-[#0F172A] mb-2 text-center">
-                            Account Exists
+                            {errorModal.title}
                         </Text>
 
                         <Text className="text-base font-outfit-regular text-slate-500 text-center mb-8">
-                            This phone number is already registered. Please log in instead or use a different number.
+                            {errorModal.message}
                         </Text>
 
                         <TouchableOpacity
                             className="bg-blue-700 w-full py-4 rounded-xl shadow-sm active:opacity-90"
-                            onPress={() => setShowErrorModal(false)}
+                            onPress={hideError}
                         >
                             <Text className="text-white text-center font-outfit-bold text-lg">
                                 Got it

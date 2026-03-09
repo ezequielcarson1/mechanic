@@ -42,7 +42,6 @@ export default function AppointmentsScreen() {
                 Tabs layout has title 'Appointments'. We add the tab switcher below. */}
 
             <View className="px-4 py-4">
-                <Text className="text-blue-900 font-outfit-bold text-lg mb-1">Appointments</Text>
                 <Text className="text-blue-500 font-outfit-medium text-sm mb-4">Your active and pending requests</Text>
 
                 {/* Tab Switcher */}
