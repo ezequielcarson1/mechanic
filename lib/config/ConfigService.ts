@@ -15,8 +15,8 @@ const DEFAULT_FALLBACK_CONFIG: BootstrapConfig = {
     defaultEnv: 'prod',
     envs: {
         prod: {
-            apiBaseUrl: 'http://20.124.131.193:3000',
-            wsUrl: 'ws://20.124.131.193:3000',
+            apiBaseUrl: 'https://mechanic-production-e8ce.up.railway.app',
+            wsUrl: 'wss://mechanic-production-e8ce.up.railway.app',
         },
         dev: {
             apiBaseUrl: 'http://192.168.1.229:3000',
