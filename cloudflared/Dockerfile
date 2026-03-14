@@ -1,2 +1,3 @@
 FROM cloudflare/cloudflared:latest
-CMD tunnel --no-autoupdate run --token $TUNNEL_TOKEN
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
