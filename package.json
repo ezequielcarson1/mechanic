@@ -11,6 +11,7 @@
     "lint": "expo lint",
     "backup": "tar --exclude='./node_modules' --exclude='./server/node_modules' --exclude='./admin-portal/node_modules' --exclude='./ios/Pods' --exclude='./ios/build' --exclude='./android/.gradle' --exclude='./android/build' --exclude='./admin-portal/.next' --exclude='./admin-portal/out' --exclude='./admin-portal/dist' --exclude='./.git' --exclude='./.expo' --exclude='./.DS_Store' --exclude='./assets' -czf \"$HOME/Downloads/Mechanic_backup_$(date +%Y-%m-%d_%H-%M-%S).tar.gz\" .",
     "upload": "bash ./scripts/upload.sh",
+    "upload-railway": "bash ./scripts/upload-railway.sh",
     "upload_all": "UPLOAD_ALL=true bash ./scripts/upload.sh",
     "vpn": "echo '🔌 Opening SSH tunnel to Azure Minikube K8s API (localhost:8443 → remote:32776)...' && echo '   Press Ctrl+C to disconnect.' && ssh -N -L 8443:127.0.0.1:32776 usuarioifx1@20.124.131.193",
     "local": "bash ./scripts/local-deploy.sh",

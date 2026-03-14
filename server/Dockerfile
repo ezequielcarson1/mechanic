@@ -12,11 +12,13 @@ COPY package.json package-lock.json ./
 
 RUN npm ci --omit=dev
 
-# Copy application source
+# Copy application source (includes mechanic.db as the seed DB)
 COPY . .
+
+RUN chmod +x /app/entrypoint.sh
 
 # Expose HTTP + WebSocket port
 EXPOSE 3000
 
-# Start the server
-CMD ["node", "index.js"]
+# entrypoint seeds DB_PATH volume on first boot (or when FORCE_DB_SEED=1)
+CMD ["/app/entrypoint.sh"]
