@@ -27,7 +27,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# Railway overrides this with $PORT at runtime; 80 is used for K8s/local
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
