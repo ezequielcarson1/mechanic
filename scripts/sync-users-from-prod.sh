@@ -1,25 +1,24 @@
 #!/bin/bash
 set -e
 
-REMOTE_USER="usuarioifx1"
-REMOTE_HOST="minikube"
-REMOTE_DB_PATH="/tmp/hostpath-provisioner/mechanic/db-pvc/mechanic.db"
 PROD_DB="/tmp/mechanic-prod.db"
 LOCAL_DB="$(dirname "$0")/../server/mechanic.db"
 
-echo "📥 Fetching production DB from Minikube (via SSH → $REMOTE_HOST)..."
+RAILWAY_API_HOST="mechanic-production-e8ce.up.railway.app"
+DB_BACKUP_TOKEN="66c6d0a7e6c5281de0a587c995fedd7b1fa5460241198a1dfe576ab50d2da365"
 
-# Copy directly from the minikube container's PVC hostpath — no kubectl needed
-ssh $REMOTE_USER@$REMOTE_HOST \
-  "docker exec minikube cat $REMOTE_DB_PATH" > "$PROD_DB" 2>/dev/null
+echo "📥 Fetching production DB from Railway..."
 
-if [ ! -s "$PROD_DB" ]; then
-  echo "❌  Could not read production DB — skipping user sync."
+HTTP_STATUS=$(curl -s -w "%{http_code}" -o "$PROD_DB" \
+  "https://${RAILWAY_API_HOST}/api/admin/db-backup?token=${DB_BACKUP_TOKEN}")
+
+if [ "$HTTP_STATUS" != "200" ] || [ ! -s "$PROD_DB" ]; then
+  echo "❌  Could not download production DB (HTTP $HTTP_STATUS) — skipping user sync."
   rm -f "$PROD_DB"
   exit 0
 fi
 
-echo "✅ Production DB downloaded ($(wc -c < $PROD_DB | tr -d ' ') bytes)."
+echo "✅ Production DB downloaded ($(wc -c < "$PROD_DB" | tr -d ' ') bytes)."
 
 echo "🔄 Merging users, addresses, vehicles and mechanic profiles into local DB..."
 

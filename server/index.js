@@ -198,6 +198,16 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
 });
 
+// DB backup download — protected by DB_BACKUP_TOKEN env var
+app.get('/api/admin/db-backup', (req, res) => {
+    const token = process.env.DB_BACKUP_TOKEN;
+    if (!token || req.query.token !== token) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const dbPath = process.env.DB_PATH || path.resolve(__dirname, 'mechanic.db');
+    res.download(dbPath, 'mechanic.db');
+});
+
 // Assistance Routes
 app.get('/api/assistance', async (req, res) => {
     try {
