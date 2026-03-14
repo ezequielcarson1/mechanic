@@ -1,9 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
 // Firebase API key for server-side ID token verification (no service account needed)
-const FIREBASE_API_KEY = 'AIzaSyCIlnVhrJgKit5dl8F8CTWsAQBjnoZiLL0';
+const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY;
+if (!FIREBASE_API_KEY) throw new Error('Missing env var: FIREBASE_API_KEY');
 
 /**
  * Verifies a Firebase ID token using the Identity Toolkit REST API.
@@ -359,7 +361,8 @@ app.delete('/api/appointments/:id', async (req, res) => {
 });
 
 // ================== Daily.co Video Room Routes ==================
-const DAILY_API_KEY = '7474b4512937a965a2f3d2e9861da062706161381786fb356c6fb12fbabad50c';
+const DAILY_API_KEY = process.env.DAILY_API_KEY;
+if (!DAILY_API_KEY) throw new Error('Missing env var: DAILY_API_KEY');
 const DAILY_API_URL = 'https://api.daily.co/v1';
 
 // Create a video room for an appointment

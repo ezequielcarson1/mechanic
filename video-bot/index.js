@@ -1,10 +1,12 @@
+require('dotenv').config();
 const express = require('express');
 const { spawn } = require('child_process');
 
 const app = express();
 app.use(express.json());
 
-const DAILY_API_KEY = '7474b4512937a965a2f3d2e9861da062706161381786fb356c6fb12fbabad50c';
+const DAILY_API_KEY = process.env.DAILY_API_KEY;
+if (!DAILY_API_KEY) throw new Error('Missing env var: DAILY_API_KEY');
 const DAILY_API_URL = 'https://api.daily.co/v1';
 const BOT_DURATION_MS = 2 * 60 * 1000; // 2 minutes
 

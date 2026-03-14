@@ -10,14 +10,18 @@ interface UserStatus {
     isOnline: number;
 }
 
-// Derive WS URL from the API base URL
+// Derive WS URL from the API base URL (runtime config takes priority)
 function getWsUrl(): string {
-    const apiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '';
+    const apiBase: string =
+        (window as any).__ENV__?.API_BASE_URL ||
+        (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+        '';
     if (apiBase) {
-        // e.g. http://20.124.131.193:3000/api → ws://20.124.131.193:3000
+        // e.g. https://mechanic-production-e8ce.up.railway.app/api
+        //   → wss://mechanic-production-e8ce.up.railway.app
         return apiBase.replace(/^http/, 'ws').replace(/\/api$/, '');
     }
-    // Relative (same host, served behind nginx)
+    // Fallback: same host (only valid if served behind a WS-capable proxy)
     const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
     return `${proto}://${window.location.host}`;
 }

@@ -1,10 +1,12 @@
 import axios from 'axios';
 
-// In Docker the nginx proxy rewrites /api → backend, so we use a relative base.
-// Locally set VITE_API_BASE_URL=http://192.168.1.229:3000/api (or your LAN IP) in admin-portal/.env.local
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
-});
+// Priority: runtime window.__ENV__ (Docker) → build-time VITE_API_BASE_URL (dev) → relative fallback
+const apiBaseUrl: string =
+    (window as any).__ENV__?.API_BASE_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    '/api';
+
+const api = axios.create({ baseURL: apiBaseUrl });
 
 export const UserAPI = {
     getAll: (role?: string) => api.get('/users', { params: { role } }),

@@ -8,6 +8,8 @@
   </head>
   <body class="bg-slate-950 text-slate-50">
     <div id="root"></div>
+    <!-- Runtime config injected by docker-entrypoint.sh (sets window.__ENV__) -->
+    <script src="/env.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,5 +1,7 @@
 # ── Admin Portal ────────────────────────────────────────────────────
-# Multi-stage build: build Vite/React app, then serve with nginx
+# Multi-stage build: build Vite/React app, then serve with nginx.
+# API_BASE_URL is injected at container startup (not build time),
+# so the same image works on Railway, K8s, and local dev.
 
 # Stage 1: Build
 FROM node:20-alpine AS builder
@@ -18,10 +20,13 @@ FROM nginx:stable-alpine
 # Copy built assets
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Nginx config that handles SPA client-side routing and
-# proxies /api and /ws calls to the backend server
+# Static nginx config (no upstream proxy — SPA calls the API directly)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Entrypoint: writes /env.js from API_BASE_URL env var, then starts nginx
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/docker-entrypoint.sh"]

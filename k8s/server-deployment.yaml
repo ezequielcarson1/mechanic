@@ -25,6 +25,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: server-config
+            - secretRef:
+                name: mechanic-secrets
           volumeMounts:
             - name: db-storage
               mountPath: /app/db
