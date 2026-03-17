@@ -12,7 +12,20 @@
           "package_name": "com.darkseed.mechanic"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "709444677117-br03i7lrdf3l8mb5egha7131ft1vqg36.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.darkseed.mechanic",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "709444677117-nq2hk4bfi8q0s1mgo4v3od0s8t2pvk9n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDE58awL21JKB4blzPYHmm75roqMfwwALs"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "709444677117-nq2hk4bfi8q0s1mgo4v3od0s8t2pvk9n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "709444677117-r0900ah6ai8kdlqduold3iv3ucsk79tc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.darkseed.mechanic"
+              }
+            }
+          ]
         }
       }
     }

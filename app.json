@@ -24,6 +24,11 @@
     },
     "android": {
       "googleServicesFile": "./firebase/google-services.json",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDE58awL21JKB4blzPYHmm75roqMfwwALs"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/mechanic-icon.png",
