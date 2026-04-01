@@ -3,21 +3,21 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>709444677117-r0900ah6ai8kdlqduold3iv3ucsk79tc.apps.googleusercontent.com</string>
+	<string>469009119595-359amar6s6dstfaoem31gusa1fv8sceq.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.709444677117-r0900ah6ai8kdlqduold3iv3ucsk79tc</string>
+	<string>com.googleusercontent.apps.469009119595-359amar6s6dstfaoem31gusa1fv8sceq</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCIlnVhrJgKit5dl8F8CTWsAQBjnoZiLL0</string>
+	<string>AIzaSyBVFvRDbNRYVbuq_nG4PpwdKHjnHKK-TeI</string>
 	<key>GCM_SENDER_ID</key>
-	<string>709444677117</string>
+	<string>469009119595</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.darkseed.mechanic</string>
+	<string>com.pixel.mechanic</string>
 	<key>PROJECT_ID</key>
-	<string>my-project-1524418405364</string>
+	<string>mechanic-assistance-f3e3d</string>
 	<key>STORAGE_BUCKET</key>
-	<string>my-project-1524418405364.firebasestorage.app</string>
+	<string>mechanic-assistance-f3e3d.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:709444677117:ios:90f1977b6b217a9567bd94</string>
+	<string>1:469009119595:ios:a1c96b961c42ec48d7342e</string>
 </dict>
 </plist>

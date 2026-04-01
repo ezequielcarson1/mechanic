@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.darkseed.mechanic",
+      "bundleIdentifier": "com.pixel.mechanic",
       "googleServicesFile": "./firebase/GoogleService-Info.plist",
       "entitlements": {
         "aps-environment": "production"
@@ -19,16 +19,18 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.pixel.mechanic"
+            ]
+          }
+        ]
       }
     },
     "android": {
       "googleServicesFile": "./firebase/google-services.json",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyDE58awL21JKB4blzPYHmm75roqMfwwALs"
-        }
-      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/mechanic-icon.png",
@@ -37,7 +39,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.darkseed.mechanic"
+      "package": "com.pixel.mechanic"
     },
     "web": {
       "output": "static",
@@ -88,7 +90,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7a0b79d6-4a87-4444-ba02-2fb926b30ac1"
+        "projectId": "20d179e7-8262-4a9c-892c-8eab8b888aeb"
       }
     }
   }
