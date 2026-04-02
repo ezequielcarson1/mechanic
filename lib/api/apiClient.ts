@@ -2,6 +2,16 @@ import { ConfigService } from '../config/ConfigService';
 import { ApiError, ApiResponse } from './types';
 
 /**
+ * Safely joins baseUrl and endpoint, preventing double-slash issues.
+ * e.g. buildUrl('https://host.com/', '/api/users') → 'https://host.com/api/users'
+ */
+function buildUrl(baseUrl: string, endpoint: string): string {
+    const normalizedBase = baseUrl.replace(/\/+$/, '');
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${normalizedBase}${normalizedEndpoint}`;
+}
+
+/**
  * Parses the standardized API envelope and returns only the `data` field.
  *
  * All backend endpoints return:
@@ -34,14 +44,14 @@ export const apiClient = {
     async get<T = unknown>(endpoint: string): Promise<T> {
         await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
-        const response = await fetch(`${baseUrl}${endpoint}`);
+        const response = await fetch(buildUrl(baseUrl, endpoint));
         return unwrapResponse<T>(response, 'GET', endpoint);
     },
 
     async post<T = unknown>(endpoint: string, data: unknown): Promise<T> {
         await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
-        const response = await fetch(`${baseUrl}${endpoint}`, {
+        const response = await fetch(buildUrl(baseUrl, endpoint), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -52,7 +62,7 @@ export const apiClient = {
     async patch<T = unknown>(endpoint: string, data: unknown): Promise<T> {
         await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
-        const response = await fetch(`${baseUrl}${endpoint}`, {
+        const response = await fetch(buildUrl(baseUrl, endpoint), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -63,7 +73,7 @@ export const apiClient = {
     async delete<T = unknown>(endpoint: string): Promise<T> {
         await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
-        const response = await fetch(`${baseUrl}${endpoint}`, {
+        const response = await fetch(buildUrl(baseUrl, endpoint), {
             method: 'DELETE',
         });
         return unwrapResponse<T>(response, 'DELETE', endpoint);
@@ -73,7 +83,7 @@ export const apiClient = {
         await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
         // Do NOT set Content-Type — fetch sets it automatically with the multipart boundary
-        const response = await fetch(`${baseUrl}${endpoint}`, {
+        const response = await fetch(buildUrl(baseUrl, endpoint), {
             method: 'POST',
             body: formData,
         });
