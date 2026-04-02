@@ -19,8 +19,8 @@ const DEFAULT_FALLBACK_CONFIG: BootstrapConfig = {
             wsUrl: 'https://t9smggmz3a.us-east-1.awsapprunner.com/',
         },
         dev: {
-            apiBaseUrl: 'http://192.168.1.229:3000',
-            wsUrl: 'ws://192.168.1.229:3000',
+            apiBaseUrl: 'http://192.168.0.19:3000',
+            wsUrl: 'ws://192.168.0.19:3000',
         },
     },
 };

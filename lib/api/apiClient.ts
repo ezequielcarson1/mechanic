@@ -1,18 +1,44 @@
 import { ConfigService } from '../config/ConfigService';
+import { ApiError, ApiResponse } from './types';
+
+/**
+ * Parses the standardized API envelope and returns only the `data` field.
+ *
+ * All backend endpoints return:
+ *   Success → { success: true,  message: string, data: T }
+ *   Error   → { success: false, message: string, error: string }
+ *
+ * This function acts as the single unwrapping point so that every DAO
+ * receives clean domain data without knowing about the envelope.
+ */
+async function unwrapResponse<T>(response: Response, method: string, endpoint: string): Promise<T> {
+    let body: ApiResponse<T>;
+
+    try {
+        body = await response.json();
+    } catch {
+        throw new Error(`${method} ${endpoint}: Failed to parse response body (status ${response.status})`);
+    }
+
+    // The API may return non-2xx with the standard envelope — handle both cases.
+    if (!response.ok || !body.success) {
+        const apiMessage = body.message ?? response.statusText;
+        const apiError = 'error' in body ? body.error : 'Unknown error';
+        throw new ApiError(response.status, apiMessage, apiError);
+    }
+
+    return body.data as T;
+}
 
 export const apiClient = {
-    async get<T = any>(endpoint: string): Promise<T> {
-        await ConfigService.init(); // Ensure loaded before fetching
+    async get<T = unknown>(endpoint: string): Promise<T> {
+        await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
         const response = await fetch(`${baseUrl}${endpoint}`);
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(`GET ${endpoint} failed: ${errorData.error || response.statusText}`);
-        }
-        return response.json();
+        return unwrapResponse<T>(response, 'GET', endpoint);
     },
 
-    async post<T = any>(endpoint: string, data: any): Promise<T> {
+    async post<T = unknown>(endpoint: string, data: unknown): Promise<T> {
         await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
         const response = await fetch(`${baseUrl}${endpoint}`, {
@@ -20,14 +46,10 @@ export const apiClient = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(`POST ${endpoint} failed: ${errorData.error || response.statusText}`);
-        }
-        return response.json();
+        return unwrapResponse<T>(response, 'POST', endpoint);
     },
 
-    async patch<T = any>(endpoint: string, data: any): Promise<T> {
+    async patch<T = unknown>(endpoint: string, data: unknown): Promise<T> {
         await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
         const response = await fetch(`${baseUrl}${endpoint}`, {
@@ -35,21 +57,19 @@ export const apiClient = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
-        if (!response.ok) throw new Error(`PATCH ${endpoint} failed: ${response.statusText}`);
-        return response.json();
+        return unwrapResponse<T>(response, 'PATCH', endpoint);
     },
 
-    async delete<T = any>(endpoint: string): Promise<T> {
+    async delete<T = unknown>(endpoint: string): Promise<T> {
         await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
         const response = await fetch(`${baseUrl}${endpoint}`, {
             method: 'DELETE',
         });
-        if (!response.ok) throw new Error(`DELETE ${endpoint} failed: ${response.statusText}`);
-        return response.json();
+        return unwrapResponse<T>(response, 'DELETE', endpoint);
     },
 
-    async upload<T = any>(endpoint: string, formData: FormData): Promise<T> {
+    async upload<T = unknown>(endpoint: string, formData: FormData): Promise<T> {
         await ConfigService.init();
         const baseUrl = ConfigService.getApiBaseUrl();
         // Do NOT set Content-Type — fetch sets it automatically with the multipart boundary
@@ -57,10 +77,6 @@ export const apiClient = {
             method: 'POST',
             body: formData,
         });
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(`POST ${endpoint} failed: ${(errorData as any).error || response.statusText}`);
-        }
-        return response.json();
-    }
+        return unwrapResponse<T>(response, 'POST', endpoint);
+    },
 };

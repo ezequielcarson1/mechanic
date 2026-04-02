@@ -21,8 +21,8 @@ export class UserDAO implements IUserDAO {
     }
 
     async checkPhoneExists(phone: string): Promise<boolean> {
-        const response = await apiClient.get<{ exists: boolean }>(`/api/users/check-phone/${encodeURIComponent(phone)}`);
-        return response.exists;
+        const result = await apiClient.get<{ exists: boolean }>(`/api/users/check-phone/${encodeURIComponent(phone)}`);
+        return result.exists;
     }
 
     /** Pre-checks whether a phone number is allowed to receive an OTP before calling Firebase.
