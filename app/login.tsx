@@ -4,6 +4,7 @@ import { GradientLayout } from '@/components/ui/GradientLayout';
 import { Input } from '@/components/ui/Input';
 import { NumericKeypad } from '@/components/ui/Keypad';
 import { useUser } from '@/context/UserContext';
+import { ApiError } from '@/lib/api/types';
 import { userDAO } from '@/lib/dao/UserDAO';
 import { getIdToken, sendOTP, verifyOTP } from '@/lib/firebase/auth';
 import { getLastPhone, saveLastPhone } from '@/lib/storage';
@@ -76,19 +77,33 @@ export default function LoginScreen() {
         fullPhoneRef.current = e164;
         setIsLoading(true);
         try {
-            const preCheck = await userDAO.preCheckPhone(e164);
-            if (!preCheck.allowed) {
-                showError('Verification Unavailable', preCheck.message || 'Unable to send verification code. Please try again or contact support.');
-                return;
+            // Pre-check is a non-critical gate — if the endpoint is not deployed (404),
+            // we gracefully skip it and proceed to send the OTP.
+            try {
+                const preCheck = await userDAO.preCheckPhone(e164);
+                if (!preCheck.allowed) {
+                    showError('Verification Unavailable', preCheck.message || 'Unable to send verification code. Please try again or contact support.');
+                    return;
+                }
+            } catch (preCheckErr) {
+                if (preCheckErr instanceof ApiError && preCheckErr.statusCode === 404) {
+                    console.warn('[Login] pre-check endpoint not available, skipping gate');
+                } else {
+                    throw preCheckErr;
+                }
             }
+
             await sendOTP(e164);
             setOtpCode('');
             setStep('otp');
-        } catch (err: any) {
-            const rawMessage = err.message || '';
-            const displayMessage = rawMessage.includes('auth/too-many-requests')
+        } catch (err: unknown) {
+            const message = err instanceof ApiError
+                ? err.apiMessage
+                : err instanceof Error ? err.message : '';
+
+            const displayMessage = message.includes('auth/too-many-requests')
                 ? 'Too many login attempts. Please wait a few minutes before trying again.'
-                : rawMessage || 'Failed to send verification code. Please try again.';
+                : message || 'Failed to send verification code. Please try again.';
 
             showError('Error', displayMessage);
         } finally {
@@ -119,11 +134,14 @@ export default function LoginScreen() {
                     { label: 'Sign Up', onPress: () => router.push('/setup') }
                 );
             }
-        } catch (err: any) {
-            const rawMessage = err.message || '';
-            const displayMessage = rawMessage.includes('auth/too-many-requests')
+        } catch (err: unknown) {
+            const message = err instanceof ApiError
+                ? err.apiMessage
+                : err instanceof Error ? err.message : '';
+
+            const displayMessage = message.includes('auth/too-many-requests')
                 ? 'Accounts are locked temporarily after too many attempts. Please try again later.'
-                : rawMessage || 'Invalid code. Please try again.';
+                : message || 'Invalid code. Please try again.';
 
             showError('Verification Failed', displayMessage);
         } finally {
