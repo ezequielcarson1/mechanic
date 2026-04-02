@@ -15,9 +15,15 @@ export class UserDAO implements IUserDAO {
         return apiClient.post('/api/auth/login', { phone });
     }
 
-    /** Firebase-authenticated login: sends the ID token + phone fallback to the backend */
+    /** Firebase-authenticated login: sends the ID token + phone fallback to the backend.
+     *  The backend returns { accessToken, user } — we extract just the user record. */
     async loginWithFirebase(firebaseIdToken: string, phone?: string): Promise<UserData | null> {
-        return apiClient.post('/api/auth/login', { idToken: firebaseIdToken, phone });
+        const result = await apiClient.post<{ accessToken: string; user: UserData }>(
+            '/api/auth/login',
+            { idToken: firebaseIdToken, phone },
+        );
+        // TODO: persist accessToken for authenticated API calls when JWT auth is enforced
+        return result.user ?? null;
     }
 
     async checkPhoneExists(phone: string): Promise<boolean> {
