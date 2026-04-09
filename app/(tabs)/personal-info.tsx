@@ -82,8 +82,24 @@ export default function PersonalInfoScreen() {
         }
     };
 
+    const getPlainPhoneNumber = (text: string) => {
+        if (!text) return '';
+        const cleaned = text.replace(/\D/g, '');
+        if (cleaned.length === 10) {
+            return `+1${cleaned}`;
+        }
+        if (cleaned.length === 11 && cleaned.startsWith('1')) {
+            return `+${cleaned}`;
+        }
+        return `+${cleaned}`;
+    };
+
     const handleUpdate = async () => {
-        await updateUser(formData);
+        const payloadToUpdate = {
+            ...formData,
+            phone: getPlainPhoneNumber(formData.phone)
+        };
+        await updateUser(payloadToUpdate);
         setShowSuccessModal(true);
     };
 
