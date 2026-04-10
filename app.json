@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Mechanic",
-    "slug": "Mechanic",
+    "name": "Mechanic Assitance V2",
+    "slug": "mechanic-assistance-v2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/mechanic-icon.png",
@@ -90,7 +90,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "20d179e7-8262-4a9c-892c-8eab8b888aeb"
+        "projectId": "5e19e74e-d50d-4110-bbbb-2edd9eb3f4ee"
       }
     }
   }
