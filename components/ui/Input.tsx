@@ -19,7 +19,6 @@ export function Input({
   containerClassName,
   leftIcon,
   isPassword = false,
-  style,
   ...props
 }: InputProps) {
   const [showPassword, setShowPassword] = useState(!isPassword);
@@ -34,10 +33,9 @@ export function Input({
       {leftIcon && <View className="mr-3">{leftIcon}</View>}
       <TextInput
         className={cn(
-          "flex-1 font-outfit-medium text-black text-base",
+          "flex-1 self-center font-outfit-medium text-black text-base",
           className,
         )}
-        style={[{ paddingVertical: 0 }, style]}
         secureTextEntry={isPassword && !showPassword}
         placeholderTextColor="#9CA3AF"
         {...props}
