@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { mediaDAO } from "@/lib/dao/MediaDAO";
 import { saveSetupProgress } from "@/lib/storage";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -6,6 +7,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
     ActionSheetIOS,
+    ActivityIndicator,
     Alert,
     Image,
     Platform,
@@ -18,6 +20,12 @@ import {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Side = "front" | "back";
+
+interface UploadedImage {
+  localUri: string;
+  remoteUrl: string;
+  remoteKey: string;
+}
 
 const DOCUMENT_TYPES = [
   "Driving Licence",
@@ -60,8 +68,9 @@ async function pickFromGallery(): Promise<string | null> {
 export default function IdentityScreen() {
   const router = useRouter();
   const [documentType, setDocumentType] = useState<string | null>(null);
-  const [frontImage, setFrontImage] = useState<string | null>(null);
-  const [backImage, setBackImage] = useState<string | null>(null);
+  const [frontImage, setFrontImage] = useState<UploadedImage | null>(null);
+  const [backImage, setBackImage] = useState<UploadedImage | null>(null);
+  const [isUploading, setIsUploading] = useState<Side | null>(null);
 
   // ── Document type picker ────────────────────────────────────────────────────
   const handleDocTypePicker = () => {
@@ -78,7 +87,6 @@ export default function IdentityScreen() {
         },
       );
     } else {
-      // Android fallback — simple Alert with buttons
       Alert.alert(
         "Select Document Type",
         undefined,
@@ -90,10 +98,34 @@ export default function IdentityScreen() {
     }
   };
 
+  // ── Upload photo to media-service ──────────────────────────────────────────
+  const uploadAndSetImage = async (localUri: string, side: Side) => {
+    setIsUploading(side);
+    try {
+      const result = await mediaDAO.uploadPhoto(localUri);
+      const uploaded: UploadedImage = {
+        localUri,
+        remoteUrl: result.url,
+        remoteKey: result.key,
+      };
+      if (side === "front") {
+        setFrontImage(uploaded);
+      } else {
+        setBackImage(uploaded);
+      }
+    } catch (error) {
+      console.error(`Failed to upload ${side} image:`, error);
+      Alert.alert(
+        "Upload Failed",
+        "Could not upload the photo. Please try again.",
+      );
+    } finally {
+      setIsUploading(null);
+    }
+  };
+
   // ── Photo picker (camera / gallery) ────────────────────────────────────────
   const handlePickImage = (side: Side) => {
-    const setter = side === "front" ? setFrontImage : setBackImage;
-
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -101,19 +133,27 @@ export default function IdentityScreen() {
           cancelButtonIndex: 2,
         },
         async (index) => {
-          if (index === 0) setter(await pickFromCamera());
-          else if (index === 1) setter(await pickFromGallery());
+          let uri: string | null = null;
+          if (index === 0) uri = await pickFromCamera();
+          else if (index === 1) uri = await pickFromGallery();
+          if (uri) await uploadAndSetImage(uri, side);
         },
       );
     } else {
       Alert.alert("Add Photo", undefined, [
         {
           text: "Take Photo",
-          onPress: async () => setter(await pickFromCamera()),
+          onPress: async () => {
+            const uri = await pickFromCamera();
+            if (uri) await uploadAndSetImage(uri, side);
+          },
         },
         {
           text: "Choose from Gallery",
-          onPress: async () => setter(await pickFromGallery()),
+          onPress: async () => {
+            const uri = await pickFromGallery();
+            if (uri) await uploadAndSetImage(uri, side);
+          },
         },
         { text: "Cancel", style: "cancel" },
       ]);
@@ -135,8 +175,10 @@ export default function IdentityScreen() {
     }
     await saveSetupProgress("identity", {
       documentType,
-      frontImage,
-      backImage,
+      frontImageUrl: frontImage.remoteUrl,
+      backImageUrl: backImage.remoteUrl,
+      frontImageKey: frontImage.remoteKey,
+      backImageKey: backImage.remoteKey,
     });
     router.push("/setup/address");
   };
@@ -149,7 +191,7 @@ export default function IdentityScreen() {
     hint,
   }: {
     side: Side;
-    image: string | null;
+    image: UploadedImage | null;
     label: string;
     hint: string;
   }) => (
@@ -157,12 +199,20 @@ export default function IdentityScreen() {
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={() => handlePickImage(side)}
+        disabled={isUploading === side}
         className="h-48 rounded-2xl overflow-hidden mb-2 border-2 border-dashed border-blue-200 bg-blue-50/40"
       >
-        {image ? (
+        {isUploading === side ? (
+          <View className="flex-1 justify-center items-center gap-3">
+            <ActivityIndicator size="large" color="#0047AB" />
+            <Text className="text-[#0047AB] font-outfit-medium text-sm">
+              Uploading...
+            </Text>
+          </View>
+        ) : image ? (
           <>
             <Image
-              source={{ uri: image }}
+              source={{ uri: image.localUri }}
               className="w-full h-full"
               resizeMode="cover"
             />
@@ -192,6 +242,7 @@ export default function IdentityScreen() {
 
       <TouchableOpacity
         onPress={() => handlePickImage(side)}
+        disabled={isUploading === side}
         className="h-11 rounded-xl bg-[#00afcc] items-center justify-center flex-row gap-2"
         activeOpacity={0.85}
       >
@@ -277,6 +328,7 @@ export default function IdentityScreen() {
 
       <Button
         onPress={handleContinue}
+        disabled={!!isUploading}
         size="lg"
         className="bg-blue-700 rounded-xl"
       >

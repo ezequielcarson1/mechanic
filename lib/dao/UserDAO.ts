@@ -93,6 +93,18 @@ export class UserDAO implements IUserDAO {
             payload.vehicles = vehiclesData.map(({ id: _clientId, ...vehicleFields }) => vehicleFields);
         }
 
+        // Identity document: map uploaded photo URLs/keys to the DTO shape
+        const identityData = progress.identity as Record<string, unknown> | undefined;
+        if (identityData?.documentType && identityData?.frontImageUrl && identityData?.backImageUrl) {
+            payload.identityDocument = {
+                documentType: identityData.documentType,
+                frontImageUrl: identityData.frontImageUrl,
+                backImageUrl: identityData.backImageUrl,
+                frontImageKey: identityData.frontImageKey,
+                backImageKey: identityData.backImageKey,
+            };
+        }
+
         return payload;
     }
 

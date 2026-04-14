@@ -22,6 +22,43 @@ export interface AssistanceRequest {
     zip?: string;
 }
 
+export interface Address {
+    id: string;
+    type?: string;
+    street?: string;
+    apartment?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+}
+
+export interface MechanicDetail {
+    id: string;
+    workForDealer?: boolean;
+    companyName?: string;
+    companyInvitation?: string;
+    expertiseDetails?: string;
+    yearsExperience?: string;
+    aseMembership?: string;
+}
+
+export interface MechanicAvailability {
+    id: string;
+    day?: string;
+    startTime?: string;
+    endTime?: string;
+}
+
+export interface IdentityDocument {
+    id: string;
+    documentType: string;
+    frontImageUrl: string;
+    backImageUrl: string;
+    frontImageKey?: string;
+    backImageKey?: string;
+    status: string;
+}
+
 export interface UserData {
     id: string;
     email: string;
@@ -31,13 +68,12 @@ export interface UserData {
     dob: string;
     profileImage?: string;
     role: 'mechanic' | 'user';
-    address?: {
-        street?: string;
-        apartment?: string;
-        city?: string;
-        state?: string;
-        zip?: string;
-    };
+    isOnline?: boolean;
+    addresses?: Address[];
+    vehicles?: Vehicle[];
+    mechanicDetails?: MechanicDetail;
+    mechanicAvailabilities?: MechanicAvailability[];
+    identityDocument?: IdentityDocument;
 }
 
 export interface Vehicle {

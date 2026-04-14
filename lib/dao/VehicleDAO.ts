@@ -3,7 +3,7 @@ import { IVehicleDAO, Vehicle } from './interfaces';
 
 export class VehicleDAO implements IVehicleDAO {
     async getByUser(userId: string): Promise<Vehicle[]> {
-        return apiClient.get(`/api/vehicles/${encodeURIComponent(userId)}`);
+        return apiClient.get(`/api/vehicles/user/${encodeURIComponent(userId)}`);
     }
 
     async create(vehicle: Vehicle): Promise<Vehicle> {

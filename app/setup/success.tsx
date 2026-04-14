@@ -1,25 +1,42 @@
 import { Button } from '@/components/ui/Button';
+import { useUser } from '@/context/UserContext';
 import { userDAO } from '@/lib/dao/UserDAO';
+import { getIdToken } from '@/lib/firebase/auth';
 import { clearSetupProgress, getSetupProgress } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 export default function SuccessScreen() {
-    // ... (lines 10-63 unchanged mostly)
-
-    // Logic remains, just replacing imports and JSX
-
     const router = useRouter();
+    const { login } = useUser();
     const [isCreating, setIsCreating] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const hasRun = useRef(false);
 
     useEffect(() => {
-        const createAccount = async () => {
+        // Prevent double execution in React strict mode
+        if (hasRun.current) return;
+        hasRun.current = true;
+
+        const createAccountAndLogin = async () => {
             try {
                 const progress = await getSetupProgress();
                 await userDAO.register(progress);
+
+                // Auto-login: use the Firebase token from the OTP step
+                const idToken = await getIdToken();
+                const phone = (progress.phone as Record<string, unknown>)?.phoneNumber as string | undefined;
+
+                if (idToken) {
+                    const success = await login(idToken, phone);
+                    if (success) {
+                        setIsLoggedIn(true);
+                    }
+                }
+
                 await clearSetupProgress();
                 setIsCreating(false);
             } catch (err: any) {
@@ -29,11 +46,17 @@ export default function SuccessScreen() {
             }
         };
 
-        createAccount();
-    }, []);
+        createAccountAndLogin();
+    }, [login]);
 
     const handleGetStarted = () => {
-        router.replace('/login');
+        if (isLoggedIn) {
+            // User is authenticated — go directly to the app
+            router.replace('/(tabs)' as any);
+        } else {
+            // Fallback: manual login
+            router.replace('/login');
+        }
     };
 
     if (isCreating) {

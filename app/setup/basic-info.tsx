@@ -20,9 +20,9 @@ import { z } from "zod";
 export default function BasicInfoScreen() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: "Shayna Samett", // Pre-filled for demo matching image
-    surname: "Shayna Samett",
-    email: "ssammet135@gmail.com",
+    name: "",
+    surname: "",
+    email: "",
     dob: "",
     password: "",
     confirmPassword: "",

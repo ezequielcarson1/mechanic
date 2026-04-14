@@ -39,11 +39,11 @@ export default function PersonalInfoScreen() {
         dob: user?.dob || '',
         profileImage: user?.profileImage,
         address: {
-            street: user?.address?.street || '',
-            apartment: user?.address?.apartment || '',
-            city: user?.address?.city || '',
-            state: user?.address?.state || '',
-            zip: user?.address?.zip || ''
+            street: user?.addresses?.[0]?.street || '',
+            apartment: user?.addresses?.[0]?.apartment || '',
+            city: user?.addresses?.[0]?.city || '',
+            state: user?.addresses?.[0]?.state || '',
+            zip: user?.addresses?.[0]?.zip || ''
         }
     });
 
@@ -57,11 +57,11 @@ export default function PersonalInfoScreen() {
                 dob: user.dob,
                 profileImage: user.profileImage,
                 address: {
-                    street: user.address?.street || '',
-                    apartment: user.address?.apartment || '',
-                    city: user.address?.city || '',
-                    state: user.address?.state || '',
-                    zip: user.address?.zip || ''
+                    street: user.addresses?.[0]?.street || '',
+                    apartment: user.addresses?.[0]?.apartment || '',
+                    city: user.addresses?.[0]?.city || '',
+                    state: user.addresses?.[0]?.state || '',
+                    zip: user.addresses?.[0]?.zip || ''
                 }
             });
         }

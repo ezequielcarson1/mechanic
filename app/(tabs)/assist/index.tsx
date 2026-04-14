@@ -26,8 +26,8 @@ export default function AssistFeedScreen() {
             const filters: any = {};
             if (user?.role === 'mechanic') {
                 // Localized filtering: show only requests in the same ZIP code
-                if (user?.address?.zip) {
-                    filters.zip = user.address.zip;
+                if (user?.addresses?.[0]?.zip) {
+                    filters.zip = user.addresses[0].zip;
                 }
                 filters.status = 'pending';
             } else if (user?.role === 'user') {
@@ -53,7 +53,7 @@ export default function AssistFeedScreen() {
             if (user) {
                 loadRequests();
             }
-        }, [filter, user?.id, user?.address?.zip])
+        }, [filter, user?.id, user?.addresses])
     );
 
     useEffect(() => {

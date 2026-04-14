@@ -1,34 +1,11 @@
 import { userDAO } from '@/lib/dao/UserDAO';
+import { UserData } from '@/lib/dao/interfaces';
 import { firebaseSignOut } from '@/lib/firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
-export interface UserData {
-    id: string;
-    name: string;
-    surname: string;
-    email: string;
-    phone: string;
-    dob: string;
-    profileImage?: string;
-    role: 'mechanic' | 'user';
-    isOnline?: boolean;
-    address?: {
-        street?: string;
-        apartment?: string;
-        city?: string;
-        state?: string;
-        zip?: string;
-    };
-    workAddress?: {
-        street?: string;
-        apartment?: string;
-        city?: string;
-        state?: string;
-        zip?: string;
-    };
-}
+export type { UserData } from '@/lib/dao/interfaces';
 
 interface UserContextType {
     user: UserData | null;

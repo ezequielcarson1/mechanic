@@ -23,8 +23,8 @@ export function UserHeaderRight() {
         </Text>
         <View className="flex-row items-center">
           <Text className="text-[9px] font-outfit-medium text-blue-600 capitalize">{user?.role}</Text>
-          {user?.address?.zip ? (
-            <Text className="text-[9px] font-outfit-regular text-gray-400 ml-1">• {user.address.zip}</Text>
+          {user?.addresses?.[0]?.zip ? (
+            <Text className="text-[9px] font-outfit-regular text-gray-400 ml-1">• {user.addresses[0].zip}</Text>
           ) : null}
         </View>
       </View>
