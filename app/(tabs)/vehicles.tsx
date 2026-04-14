@@ -117,7 +117,6 @@ export default function VehiclesScreen() {
                 await vehicleDAO.update(editingVehicleId, formData);
             } else {
                 await vehicleDAO.create({
-                    id: Date.now().toString(),
                     userId: user.id,
                     ...formData
                 });
@@ -140,7 +139,7 @@ export default function VehiclesScreen() {
             vin: vehicle.vin,
             details: vehicle.details
         });
-        setEditingVehicleId(vehicle.id);
+        setEditingVehicleId(vehicle.id ?? null);
         setIsEditing(true);
     };
 
@@ -416,7 +415,7 @@ export default function VehiclesScreen() {
                                 <Text className="text-lg font-outfit-bold text-[#0F172A] uppercase">{v.make} {v.model}</Text>
                                 <Text className="text-blue-600 font-outfit-medium text-xs tracking-widest uppercase mt-1">{v.plate || 'No Plate'}</Text>
                             </View>
-                            <TouchableOpacity onPress={() => handleDeleteVehicle(v.id)} className="p-2">
+                            <TouchableOpacity onPress={() => v.id && handleDeleteVehicle(v.id)} className="p-2">
                                 <Ionicons name="trash-outline" size={20} color="#EF4444" style={{ opacity: 0.6 }} />
                             </TouchableOpacity>
                         </TouchableOpacity>

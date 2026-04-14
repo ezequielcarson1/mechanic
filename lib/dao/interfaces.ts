@@ -77,7 +77,7 @@ export interface UserData {
 }
 
 export interface Vehicle {
-    id: string;
+    id?: string;
     userId?: string;
     make: string;
     model: string;
@@ -89,7 +89,7 @@ export interface Vehicle {
 
 export interface IVehicleDAO {
     getByUser(userId: string): Promise<Vehicle[]>;
-    create(vehicle: Vehicle): Promise<Vehicle>;
+    create(vehicle: Omit<Vehicle, 'id'>): Promise<Vehicle>;
     update(id: string, updates: Partial<Vehicle>): Promise<void>;
     delete(id: string): Promise<void>;
 }
