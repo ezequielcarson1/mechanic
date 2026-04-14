@@ -13,8 +13,19 @@ class MediaDAOImpl {
   async uploadPhoto(localUri: string): Promise<UploadedPhoto> {
     const formData = new FormData();
     const filename = localUri.split('/').pop() || 'photo.jpg';
-    const match = /\.(\w+)$/.exec(filename);
-    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    const ext = filename.split('.').pop()?.toLowerCase() || 'jpg';
+
+    // Map file extension to MIME type — iOS can produce heic, webp, or jpeg
+    const mimeTypes: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      heic: 'image/heic',
+      heif: 'image/heif',
+      webp: 'image/webp',
+    };
+    const type = mimeTypes[ext] || 'image/jpeg';
 
     formData.append('photo', {
       uri: localUri,
