@@ -12,15 +12,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-	Image,
-	Keyboard,
-	Modal,
-	Platform,
-	Text,
-	TextInput,
-	TouchableOpacity,
-	TouchableWithoutFeedback,
-	View,
+  Image,
+  Keyboard,
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
 
 type Step = "phone" | "otp";
@@ -109,7 +109,7 @@ export default function LoginScreen() {
           showError(
             "Verification Unavailable",
             preCheck.message ||
-              "Unable to send verification code. Please try again or contact support.",
+            "Unable to send verification code. Please try again or contact support.",
           );
           return;
         }
@@ -296,16 +296,16 @@ export default function LoginScreen() {
             accessible={false}
           >
             <GradientLayout className="flex-1" resizeMode="cover">
-              <View className="flex-1 justify-end px-6 pb-12">
+              <View className="flex-1 justify-end px-6 pb-[108px] gap-4">
                 <View className="flex-1" />
 
-                <Text className="text-white text-3xl font-outfit-bold text-center mb-8">
+                <Text className="text-white text-3xl font-outfit-bold text-center">
                   Get Started
                 </Text>
 
-                <View className="w-full mb-6">
+                <View className="w-full">
                   {method === "email" ? (
-                    <>
+                    <View className="gap-4">
                       <Input
                         placeholder="Username"
                         leftIcon={
@@ -315,7 +315,6 @@ export default function LoginScreen() {
                             color="#9CA3AF"
                           />
                         }
-                        containerClassName="mb-4"
                       />
                       <Input
                         placeholder="Password"
@@ -327,11 +326,10 @@ export default function LoginScreen() {
                             color="#9CA3AF"
                           />
                         }
-                        containerClassName="mb-4"
                       />
-                    </>
+                    </View>
                   ) : (
-                    <View className="flex-row gap-3 mb-4">
+                    <View className="flex-row gap-3">
                       <View className="bg-white rounded-xl px-4 justify-center items-center h-[52px]">
                         <Text className="font-outfit-medium text-black text-base">
                           🇺🇸 + 1
@@ -352,20 +350,20 @@ export default function LoginScreen() {
                 <Button
                   onPress={handleSendOTP}
                   size="lg"
-                  className="mb-6 border-white/40 border bg-blue-600/20 backdrop-blur-sm h-[52px]"
+                  className="border-white/40 border bg-blue-600/20 backdrop-blur-sm h-[52px]"
                   isLoading={isLoading}
                 >
                   Login
                 </Button>
 
-                <Text className="text-white/80 text-center mb-4 font-outfit-regular">
+                <Text className="text-white/80 text-center font-outfit-regular">
                   Or
                 </Text>
 
-                <View className="mb-8">
+                <View className="gap-4">
                   <Button
                     variant="google"
-                    className="mb-3 h-[52px]"
+                    className="h-[52px]"
                     leftIcon={
                       <Image
                         source={require("@/assets/brands/google.png")}
@@ -379,7 +377,7 @@ export default function LoginScreen() {
                   </Button>
                   <Button
                     variant="apple"
-                    className="mb-3 h-[52px]"
+                    className="h-[52px]"
                     leftIcon={
                       <Image
                         source={require("@/assets/brands/apple.png")}
@@ -407,7 +405,7 @@ export default function LoginScreen() {
                   </Button>
                 </View>
 
-                <View className="flex-row justify-center">
+                <View className="flex-row justify-center pt-2">
                   <Text className="text-white/80 font-outfit-regular">
                     Don't have an account?{" "}
                   </Text>
