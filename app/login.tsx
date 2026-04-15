@@ -5,7 +5,15 @@ import { Input } from "@/components/ui/Input";
 import { NumericKeypad } from "@/components/ui/Keypad";
 import { useUser } from "@/context/UserContext";
 import { ApiError } from "@/lib/api/types";
-import { getIdToken, verifyOTP } from "@/lib/firebase/auth";
+import { userDAO } from "@/lib/dao/UserDAO";
+import {
+  getIdToken,
+  sendOTP,
+  signInWithApple,
+  signInWithEmail,
+  signInWithGoogle,
+  verifyOTP,
+} from "@/lib/firebase/auth";
 import { getLastPhone, saveLastPhone } from "@/lib/storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -30,6 +38,8 @@ export default function LoginScreen() {
   const [step, setStep] = useState<Step>("phone");
   const [method, setMethod] = useState<"email" | "mobile">("mobile");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showKeypad, setShowKeypad] = useState(true);
@@ -186,6 +196,78 @@ export default function LoginScreen() {
     }
   };
 
+  // ─── Social / Email login handlers ──────────────────────────────────────────
+
+  /**
+   * Authenticates with a social/email Firebase provider, gets the ID token,
+   * and calls the backend login. Handles both existing and new users.
+   */
+  const handleProviderLogin = async (
+    providerFn: () => Promise<unknown>,
+    providerName: string,
+  ) => {
+    setIsLoading(true);
+    try {
+      await providerFn();
+      const idToken = await getIdToken();
+      if (!idToken) throw new Error("Failed to get authentication token.");
+
+      const success = await login(idToken);
+      if (success) {
+        router.replace("/(tabs)/assist");
+      } else {
+        showError(
+          "Account Not Found",
+          `No account is registered with this ${providerName} account. Please sign up first.`,
+          { label: "Sign Up", onPress: () => router.push("/setup") },
+        );
+      }
+    } catch (err: unknown) {
+      // User cancelled the prompt — not an error
+      if (
+        err instanceof Error &&
+        (err.message.includes("cancelled") ||
+          err.message.includes("canceled") ||
+          err.message.includes("SIGN_IN_CANCELLED"))
+      ) {
+        return;
+      }
+
+      const message =
+        err instanceof ApiError
+          ? err.apiMessage
+          : err instanceof Error
+            ? err.message
+            : "";
+
+      showError(
+        "Login Failed",
+        message || `Failed to sign in with ${providerName}. Please try again.`,
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = () =>
+    handleProviderLogin(() => signInWithGoogle(), "Google");
+
+  const handleAppleLogin = () =>
+    handleProviderLogin(() => signInWithApple(), "Apple");
+
+  const handleEmailLogin = () => {
+    if (!emailAddress.trim() || !password.trim()) {
+      showError("Missing Fields", "Please enter both email and password.");
+      return;
+    }
+    handleProviderLogin(
+      () => signInWithEmail(emailAddress.trim(), password),
+      "Email",
+    );
+  };
+
+  // ─── OTP helpers ────────────────────────────────────────────────────────────
+
   const handleOtpKeyPress = (key: string) => {
     if (otpCode.length < 6) setOtpCode((prev) => prev + key);
   };
@@ -330,10 +412,15 @@ export default function LoginScreen() {
                   {method === "email" ? (
                     <View className="gap-4">
                       <Input
-                        placeholder="Username"
+                        placeholder="Email"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        value={emailAddress}
+                        onChangeText={setEmailAddress}
                         leftIcon={
                           <Ionicons
-                            name="person-outline"
+                            name="mail-outline"
                             size={20}
                             color="#9CA3AF"
                           />
@@ -342,6 +429,8 @@ export default function LoginScreen() {
                       <Input
                         placeholder="Password"
                         isPassword
+                        value={password}
+                        onChangeText={setPassword}
                         leftIcon={
                           <Ionicons
                             name="lock-closed-outline"
@@ -371,7 +460,7 @@ export default function LoginScreen() {
                 </View>
 
                 <Button
-                  onPress={handleSendOTP}
+                  onPress={method === "email" ? handleEmailLogin : handleSendOTP}
                   size="lg"
                   className="border-white/40 border bg-blue-600/20 backdrop-blur-sm h-[52px]"
                   isLoading={isLoading}
@@ -387,6 +476,8 @@ export default function LoginScreen() {
                   <Button
                     variant="google"
                     className="h-[52px]"
+                    onPress={handleGoogleLogin}
+                    isLoading={isLoading}
                     leftIcon={
                       <Image
                         source={require("@/assets/brands/google.png")}
@@ -401,6 +492,8 @@ export default function LoginScreen() {
                   <Button
                     variant="apple"
                     className="h-[52px]"
+                    onPress={handleAppleLogin}
+                    isLoading={isLoading}
                     leftIcon={
                       <Image
                         source={require("@/assets/brands/apple.png")}
