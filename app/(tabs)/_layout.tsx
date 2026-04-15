@@ -1,41 +1,36 @@
 import { useUser } from '@/context/UserContext';
 import { Tabs, useNavigation, useRouter } from 'expo-router';
-import { Bell, Calendar, ChevronLeft, LifeBuoy, User as UserIcon } from 'lucide-react-native';
+import { Bell, Calendar, ChevronLeft, LifeBuoy, User as UserIcon, Wrench } from 'lucide-react-native';
 import React from 'react';
 import { Image, Platform, Text, TouchableOpacity, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export function UserHeaderRight() {
+export function NotificationHeaderRight() {
   const router = useRouter();
-  const { user } = useUser();
 
   return (
     <TouchableOpacity
-      onPress={() => router.push('/(tabs)')}
+      onPress={() => router.push('/(tabs)/notifications')}
       style={{ marginRight: 16 }}
-      className="flex-row items-center"
+      className="justify-center items-center"
     >
-      <View className="items-end mr-2">
-        <Text className="text-[11px] font-outfit-bold text-[#0F172A]" numberOfLines={1}>
-          {user?.name} {user?.surname}
-        </Text>
-        <View className="flex-row items-center">
-          <Text className="text-[9px] font-outfit-medium text-blue-600 capitalize">{user?.role}</Text>
-          {user?.addresses?.[0]?.zip ? (
-            <Text className="text-[9px] font-outfit-regular text-gray-400 ml-1">• {user.addresses[0].zip}</Text>
-          ) : null}
-        </View>
-      </View>
-      <View className="w-8 h-8 rounded-full bg-blue-50 justify-center items-center border border-blue-100 overflow-hidden">
-        {user?.profileImage ? (
-          <Image source={{ uri: user.profileImage }} className="w-full h-full" />
-        ) : (
-          <UserIcon size={20} color="#0047AB" />
-        )}
-      </View>
+      <Bell size={24} color="#0047AB" />
     </TouchableOpacity>
+  );
+}
+
+function ProfileTabIcon({ color }: { color: string }) {
+  const { user } = useUser();
+  return (
+    <View className="w-7 h-7 rounded-full bg-blue-50 justify-center items-center overflow-hidden" style={{ borderColor: color, borderWidth: 1 }}>
+      {user?.profileImage ? (
+        <Image source={{ uri: user.profileImage }} className="w-full h-full" />
+      ) : (
+        <UserIcon size={20} color={color} />
+      )}
+    </View>
   );
 }
 
@@ -73,21 +68,20 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
-        name="index"
+        name="assist"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <UserIcon size={24} color={color} />,
-          headerLeft: () => null, // Hide back button on root tab
-          headerRight: () => <UserHeaderRight />,
+          title: 'Dashboard',
+          tabBarIcon: ({ color }) => <LifeBuoy size={24} color={color} />,
+          headerLeft: () => null,
+          headerRight: () => <NotificationHeaderRight />,
         }}
       />
       <Tabs.Screen
-        name="assist"
+        name="request-assistance"
         options={{
-          title: 'Assist',
-          tabBarIcon: ({ color }) => <LifeBuoy size={24} color={color} />,
-          headerLeft: () => null,
-          headerRight: () => <UserHeaderRight />,
+          title: 'Assistance',
+          tabBarIcon: ({ color }) => <Wrench size={24} color={color} />,
+          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -96,16 +90,26 @@ export default function TabLayout() {
           title: 'Appointments',
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
           headerLeft: () => null,
-          headerRight: () => <UserHeaderRight />,
+          headerRight: () => <NotificationHeaderRight />,
         }}
       />
       <Tabs.Screen
         name="notifications"
         options={{
+          href: null,
           title: 'Notifications',
           tabBarIcon: ({ color }) => <Bell size={24} color={color} />,
           headerLeft: () => null,
-          headerRight: () => <UserHeaderRight />,
+          headerRight: () => <NotificationHeaderRight />,
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <ProfileTabIcon color={color} />,
+          headerLeft: () => null, // Hide back button on root tab
+          headerRight: () => <NotificationHeaderRight />,
         }}
       />
 
@@ -123,7 +127,6 @@ export default function TabLayout() {
       {/* Hidden deep-nav routes — keep tab bar visible */}
       <Tabs.Screen name="chat" options={{ href: null, headerShown: false }} />
       <Tabs.Screen name="call" options={{ href: null, headerShown: false }} />
-      <Tabs.Screen name="request-assistance" options={{ href: null, headerShown: false }} />
       <Tabs.Screen name="video-lobby" options={{ href: null, headerShown: false }} />
       <Tabs.Screen name="video-call" options={{ href: null, headerShown: false }} />
     </Tabs>
