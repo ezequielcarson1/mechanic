@@ -33,6 +33,7 @@ export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showKeypad, setShowKeypad] = useState(true);
   const fullPhoneRef = useRef("");
   const otpInputRef = useRef<TextInput>(null);
   const [errorModal, setErrorModal] = useState<{
@@ -214,7 +215,7 @@ export default function LoginScreen() {
     <>
       {/* --- OTP Step UI --- */}
       {step === "otp" ? (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setShowKeypad(false); }} accessible={false}>
           <View className="flex-1 bg-white justify-between">
             <View className="px-8 pt-16 flex-1">
               <TouchableOpacity
@@ -234,7 +235,7 @@ export default function LoginScreen() {
               {/* 6-digit display */}
               <TouchableOpacity
                 activeOpacity={1}
-                onPress={() => otpInputRef.current?.focus()}
+                onPress={() => { setShowKeypad(true); otpInputRef.current?.focus(); }}
                 className="flex-row justify-between mb-12 px-4 relative"
               >
                 {[0, 1, 2, 3, 4, 5].map((index) => (
@@ -269,22 +270,33 @@ export default function LoginScreen() {
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={handleSendOTP}
-                className="mb-6"
-                disabled={isLoading}
-              >
-                <Text className="text-[#0047AB] text-center font-outfit-medium">
-                  Resend code
-                </Text>
-              </TouchableOpacity>
+              <View className="mb-4">
+                <Button
+                    className="bg-blue-700 rounded-xl mb-6"
+                    size="lg"
+                    onPress={() => { Keyboard.dismiss(); handleVerifyOTP(); }}
+                    isLoading={isLoading}
+                >
+                    Verify
+                </Button>
+                <TouchableOpacity
+                  onPress={handleSendOTP}
+                  className="mb-6"
+                  disabled={isLoading}
+                >
+                  <Text className="text-[#0047AB] text-center font-outfit-medium">
+                    Resend code
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <NumericKeypad
-              onKeyPress={handleOtpKeyPress}
-              onDelete={handleOtpDelete}
-              onSubmit={() => handleVerifyOTP()}
-            />
+            {showKeypad && (
+              <NumericKeypad
+                onKeyPress={handleOtpKeyPress}
+                onDelete={handleOtpDelete}
+              />
+            )}
           </View>
         </TouchableWithoutFeedback>
       ) : (
