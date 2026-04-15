@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/Input";
 import { NumericKeypad } from "@/components/ui/Keypad";
 import { useUser } from "@/context/UserContext";
 import { ApiError } from "@/lib/api/types";
-import { userDAO } from "@/lib/dao/UserDAO";
-import { getIdToken, sendOTP, verifyOTP } from "@/lib/firebase/auth";
+import { getIdToken, verifyOTP } from "@/lib/firebase/auth";
 import { getLastPhone, saveLastPhone } from "@/lib/storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -88,60 +87,61 @@ export default function LoginScreen() {
 
   // Step 1: send OTP via Firebase
   const handleSendOTP = async () => {
-    const cleaned = phoneNumber.replace(/\D/g, "");
-    if (cleaned.length < 10) {
-      showError(
-        "Invalid Number",
-        "Please enter a valid 10-digit mobile number.",
-      );
-      return;
-    }
+    router.push("/setup/vehicle-info");
+    // const cleaned = phoneNumber.replace(/\D/g, "");
+    // if (cleaned.length < 10) {
+    //   showError(
+    //     "Invalid Number",
+    //     "Please enter a valid 10-digit mobile number.",
+    //   );
+    //   return;
+    // }
 
-    const e164 = `+1${cleaned}`;
-    fullPhoneRef.current = e164;
-    setIsLoading(true);
-    try {
-      // Pre-check is a non-critical gate — if the endpoint is not deployed (404),
-      // we gracefully skip it and proceed to send the OTP.
-      try {
-        const preCheck = await userDAO.preCheckPhone(e164);
-        if (!preCheck.allowed) {
-          showError(
-            "Verification Unavailable",
-            preCheck.message ||
-            "Unable to send verification code. Please try again or contact support.",
-          );
-          return;
-        }
-      } catch (preCheckErr) {
-        if (preCheckErr instanceof ApiError && preCheckErr.statusCode === 404) {
-          console.warn(
-            "[Login] pre-check endpoint not available, skipping gate",
-          );
-        } else {
-          throw preCheckErr;
-        }
-      }
+    // const e164 = `+1${cleaned}`;
+    // fullPhoneRef.current = e164;
+    // setIsLoading(true);
+    // try {
+    //   // Pre-check is a non-critical gate — if the endpoint is not deployed (404),
+    //   // we gracefully skip it and proceed to send the OTP.
+    //   try {
+    //     const preCheck = await userDAO.preCheckPhone(e164);
+    //     if (!preCheck.allowed) {
+    //       showError(
+    //         "Verification Unavailable",
+    //         preCheck.message ||
+    //         "Unable to send verification code. Please try again or contact support.",
+    //       );
+    //       return;
+    //     }
+    //   } catch (preCheckErr) {
+    //     if (preCheckErr instanceof ApiError && preCheckErr.statusCode === 404) {
+    //       console.warn(
+    //         "[Login] pre-check endpoint not available, skipping gate",
+    //       );
+    //     } else {
+    //       throw preCheckErr;
+    //     }
+    //   }
 
-      await sendOTP(e164);
-      setOtpCode("");
-      setStep("otp");
-    } catch (err: unknown) {
-      const message =
-        err instanceof ApiError
-          ? err.apiMessage
-          : err instanceof Error
-            ? err.message
-            : "";
+    //   await sendOTP(e164);
+    //   setOtpCode("");
+    //   setStep("otp");
+    // } catch (err: unknown) {
+    //   const message =
+    //     err instanceof ApiError
+    //       ? err.apiMessage
+    //       : err instanceof Error
+    //         ? err.message
+    //         : "";
 
-      const displayMessage = message.includes("auth/too-many-requests")
-        ? "Too many login attempts. Please wait a few minutes before trying again."
-        : message || "Failed to send verification code. Please try again.";
+    //   const displayMessage = message.includes("auth/too-many-requests")
+    //     ? "Too many login attempts. Please wait a few minutes before trying again."
+    //     : message || "Failed to send verification code. Please try again.";
 
-      showError("Error", displayMessage);
-    } finally {
-      setIsLoading(false);
-    }
+    //   showError("Error", displayMessage);
+    // } finally {
+    //   setIsLoading(false);
+    // }
   };
 
   // Step 2: verify OTP, get Firebase ID token, login with backend

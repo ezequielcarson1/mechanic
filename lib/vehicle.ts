@@ -20,7 +20,49 @@ export const VEHICLE_DATA = {
     'Volkswagen': ['Jetta', 'Passat', 'Golf', 'Tiguan', 'Atlas', 'Beetle', 'ID.4']
 } as const;
 
-export type MakeType = keyof typeof VEHICLE_DATA;
+export type MakeType = string;
+
+export const fetchMakes = async (): Promise<string[]> => {
+    try {
+        const response = await fetch(
+            'https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json'
+        );
+        const data = await response.json();
+        return (data.Results || [])
+            .map((m: any) => m.MakeName)
+            .sort((a: string, b: string) => a.localeCompare(b));
+    } catch (error) {
+        console.error('Failed to fetch makes:', error);
+        return [];
+    }
+};
+
+export const fetchModelsByMake = async (make: string): Promise<string[]> => {
+    try {
+        const response = await fetch(
+            `https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${encodeURIComponent(make)}?format=json`
+        );
+        const data = await response.json();
+        return (data.Results || [])
+            .map((m: any) => m.Model_Name)
+            .sort((a: string, b: string) => a.localeCompare(b));
+    } catch (error) {
+        console.error('Failed to fetch models:', error);
+        return [];
+    }
+};
+
+export const getVehicleLogoUrl = (make: string): string => {
+    if (!make || make === 'Select') return '';
+    
+    // Slugify make name: lowercase, no spaces, specialized mappings
+    const slug = make.toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]/g, '');
+        
+    return `https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/thumb/${slug}.png`;
+};
 
 export const decodeVin = async (
     vin: string,
@@ -48,3 +90,4 @@ export const decodeVin = async (
         onError('Could not reach the VIN database. Please try again later.');
     }
 };
+
