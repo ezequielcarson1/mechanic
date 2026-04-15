@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/Input";
 import { NumericKeypad } from "@/components/ui/Keypad";
 import { useUser } from "@/context/UserContext";
 import { ApiError } from "@/lib/api/types";
-import { userDAO } from "@/lib/dao/UserDAO";
-import { getIdToken, sendOTP, verifyOTP } from "@/lib/firebase/auth";
+import { getIdToken, verifyOTP } from "@/lib/firebase/auth";
 import { getLastPhone, saveLastPhone } from "@/lib/storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -110,7 +109,7 @@ export default function LoginScreen() {
           showError(
             "Verification Unavailable",
             preCheck.message ||
-            "Unable to send verification code. Please try again or contact support.",
+              "Unable to send verification code. Please try again or contact support.",
           );
           return;
         }
@@ -215,7 +214,13 @@ export default function LoginScreen() {
     <>
       {/* --- OTP Step UI --- */}
       {step === "otp" ? (
-        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setShowKeypad(false); }} accessible={false}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+            setShowKeypad(false);
+          }}
+          accessible={false}
+        >
           <View className="flex-1 bg-white justify-between">
             <View className="px-8 pt-16 flex-1">
               <TouchableOpacity
@@ -235,7 +240,10 @@ export default function LoginScreen() {
               {/* 6-digit display */}
               <TouchableOpacity
                 activeOpacity={1}
-                onPress={() => { setShowKeypad(true); otpInputRef.current?.focus(); }}
+                onPress={() => {
+                  setShowKeypad(true);
+                  otpInputRef.current?.focus();
+                }}
                 className="flex-row justify-between mb-12 px-4 relative"
               >
                 {[0, 1, 2, 3, 4, 5].map((index) => (
@@ -272,12 +280,15 @@ export default function LoginScreen() {
 
               <View className="mb-4">
                 <Button
-                    className="bg-blue-700 rounded-xl mb-6"
-                    size="lg"
-                    onPress={() => { Keyboard.dismiss(); handleVerifyOTP(); }}
-                    isLoading={isLoading}
+                  className="bg-blue-700 rounded-xl mb-6"
+                  size="lg"
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    handleVerifyOTP();
+                  }}
+                  isLoading={isLoading}
                 >
-                    Verify
+                  Verify
                 </Button>
                 <TouchableOpacity
                   onPress={handleSendOTP}
