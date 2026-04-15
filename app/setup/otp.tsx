@@ -13,6 +13,7 @@ export default function OTPScreen() {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
     const [isResending, setIsResending] = useState(false);
+    const [showKeypad, setShowKeypad] = useState(true);
     const otpInputRef = useRef<TextInput>(null);
 
     const [errorModal, setErrorModal] = useState<{
@@ -102,7 +103,7 @@ export default function OTPScreen() {
 
     return (
         <>
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setShowKeypad(false); }} accessible={false}>
                 <View className="flex-1 bg-white justify-between">
                     <View className="px-8 pt-8 flex-1">
                         <Text className="text-xl font-outfit-bold text-[#0F172A] mb-2">
@@ -115,7 +116,7 @@ export default function OTPScreen() {
                         {/* 6-Digit Input Display with Native Autofill support */}
                         <TouchableOpacity
                             activeOpacity={1}
-                            onPress={() => otpInputRef.current?.focus()}
+                            onPress={() => { setShowKeypad(true); otpInputRef.current?.focus(); }}
                             className="flex-row justify-between mb-12 px-4 relative"
                         >
                             {[0, 1, 2, 3, 4, 5].map((index) => (
@@ -149,29 +150,29 @@ export default function OTPScreen() {
                             />
                         </TouchableOpacity>
 
-                        <View className="mt-auto mb-4">
+                        <View className="mb-4">
+                            <Button
+                                className="bg-blue-700 rounded-xl mb-6"
+                                size="lg"
+                                onPress={() => { Keyboard.dismiss(); handleSubmit(); }}
+                                isLoading={isVerifying}
+                            >
+                                Verify
+                            </Button>
                             <TouchableOpacity className="mb-6" onPress={handleResend} disabled={isResending}>
                                 <Text className="text-[#0047AB] text-center font-outfit-medium">
                                     {isResending ? 'Sending…' : 'Resend code'}
                                 </Text>
                             </TouchableOpacity>
-
-                            <Button
-                                className="bg-blue-700 rounded-xl"
-                                size="lg"
-                                onPress={() => handleSubmit()}
-                                isLoading={isVerifying}
-                            >
-                                Verify
-                            </Button>
                         </View>
                     </View>
 
-                    <NumericKeypad
-                        onKeyPress={handleKeyPress}
-                        onDelete={handleDelete}
-                        onSubmit={() => handleSubmit()}
-                    />
+                    {showKeypad && (
+                        <NumericKeypad
+                            onKeyPress={handleKeyPress}
+                            onDelete={handleDelete}
+                        />
+                    )}
                 </View>
             </TouchableWithoutFeedback>
 

@@ -99,21 +99,13 @@ export function Keypad({ onPress, onDelete, onSubmit }: KeypadProps) {
 }
 
 // Re-writing the component to be cleaner for the specific layout
-export function NumericKeypad({ onKeyPress, onDelete, onSubmit }: { onKeyPress: (k: string) => void, onDelete: () => void, onSubmit: () => void }) {
+export function NumericKeypad({ onKeyPress, onDelete, onSubmit }: { onKeyPress: (k: string) => void, onDelete: () => void, onSubmit?: () => void }) {
     const rows = [
         ['1', '2', '3', '-'],
-        ['4', '5', '6', '_'], // The image has symbols on the right column? 
+        ['4', '5', '6', '_'], 
         ['7', '8', '9', 'del'],
         ['', '0', '.', 'next']
     ];
-
-    // let's simplify to standard phone input
-    // 1 2 3
-    // 4 5 6
-    // 7 8 9
-    //   0   <del> 
-
-    // The image crop clearly shows a dark grey background for the keypad.
 
     return (
         <View className="bg-[#1F2937] pb-8 pt-4">
@@ -136,16 +128,14 @@ export function NumericKeypad({ onKeyPress, onDelete, onSubmit }: { onKeyPress: 
                 </TouchableOpacity>
             </View>
 
-            {/* The image shows the submit button as a teal circle in the bottom right, maybe overlaying? 
-                 Or maybe it's the 4th column? 
-                 Let's place it absolutely for now or in the bottom right.
-             */}
-            <TouchableOpacity
-                onPress={onSubmit}
-                className="absolute bottom-8 right-8 w-14 h-14 bg-[#99F6E4] rounded-full justify-center items-center shadow-lg"
-            >
-                <ArrowRight size={24} color="#0F172A" />
-            </TouchableOpacity>
+            {onSubmit && (
+                <TouchableOpacity
+                    onPress={onSubmit}
+                    className="absolute bottom-8 right-8 w-14 h-14 bg-[#99F6E4] rounded-full justify-center items-center shadow-lg"
+                >
+                    <ArrowRight size={24} color="#0F172A" />
+                </TouchableOpacity>
+            )}
         </View>
     );
 }

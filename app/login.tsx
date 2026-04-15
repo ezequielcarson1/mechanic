@@ -32,6 +32,7 @@ export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showKeypad, setShowKeypad] = useState(true);
   const fullPhoneRef = useRef("");
   const otpInputRef = useRef<TextInput>(null);
   const [errorModal, setErrorModal] = useState<{
@@ -87,61 +88,60 @@ export default function LoginScreen() {
 
   // Step 1: send OTP via Firebase
   const handleSendOTP = async () => {
-    router.push("/setup/vehicle-info");
-    // const cleaned = phoneNumber.replace(/\D/g, "");
-    // if (cleaned.length < 10) {
-    //   showError(
-    //     "Invalid Number",
-    //     "Please enter a valid 10-digit mobile number.",
-    //   );
-    //   return;
-    // }
+    const cleaned = phoneNumber.replace(/\D/g, "");
+    if (cleaned.length < 10) {
+      showError(
+        "Invalid Number",
+        "Please enter a valid 10-digit mobile number.",
+      );
+      return;
+    }
 
-    // const e164 = `+1${cleaned}`;
-    // fullPhoneRef.current = e164;
-    // setIsLoading(true);
-    // try {
-    //   // Pre-check is a non-critical gate — if the endpoint is not deployed (404),
-    //   // we gracefully skip it and proceed to send the OTP.
-    //   try {
-    //     const preCheck = await userDAO.preCheckPhone(e164);
-    //     if (!preCheck.allowed) {
-    //       showError(
-    //         "Verification Unavailable",
-    //         preCheck.message ||
-    //         "Unable to send verification code. Please try again or contact support.",
-    //       );
-    //       return;
-    //     }
-    //   } catch (preCheckErr) {
-    //     if (preCheckErr instanceof ApiError && preCheckErr.statusCode === 404) {
-    //       console.warn(
-    //         "[Login] pre-check endpoint not available, skipping gate",
-    //       );
-    //     } else {
-    //       throw preCheckErr;
-    //     }
-    //   }
+    const e164 = `+1${cleaned}`;
+    fullPhoneRef.current = e164;
+    setIsLoading(true);
+    try {
+      // Pre-check is a non-critical gate — if the endpoint is not deployed (404),
+      // we gracefully skip it and proceed to send the OTP.
+      try {
+        const preCheck = await userDAO.preCheckPhone(e164);
+        if (!preCheck.allowed) {
+          showError(
+            "Verification Unavailable",
+            preCheck.message ||
+              "Unable to send verification code. Please try again or contact support.",
+          );
+          return;
+        }
+      } catch (preCheckErr) {
+        if (preCheckErr instanceof ApiError && preCheckErr.statusCode === 404) {
+          console.warn(
+            "[Login] pre-check endpoint not available, skipping gate",
+          );
+        } else {
+          throw preCheckErr;
+        }
+      }
 
-    //   await sendOTP(e164);
-    //   setOtpCode("");
-    //   setStep("otp");
-    // } catch (err: unknown) {
-    //   const message =
-    //     err instanceof ApiError
-    //       ? err.apiMessage
-    //       : err instanceof Error
-    //         ? err.message
-    //         : "";
+      await sendOTP(e164);
+      setOtpCode("");
+      setStep("otp");
+    } catch (err: unknown) {
+      const message =
+        err instanceof ApiError
+          ? err.apiMessage
+          : err instanceof Error
+            ? err.message
+            : "";
 
-    //   const displayMessage = message.includes("auth/too-many-requests")
-    //     ? "Too many login attempts. Please wait a few minutes before trying again."
-    //     : message || "Failed to send verification code. Please try again.";
+      const displayMessage = message.includes("auth/too-many-requests")
+        ? "Too many login attempts. Please wait a few minutes before trying again."
+        : message || "Failed to send verification code. Please try again.";
 
-    //   showError("Error", displayMessage);
-    // } finally {
-    //   setIsLoading(false);
-    // }
+      showError("Error", displayMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Step 2: verify OTP, get Firebase ID token, login with backend
@@ -214,7 +214,13 @@ export default function LoginScreen() {
     <>
       {/* --- OTP Step UI --- */}
       {step === "otp" ? (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+            setShowKeypad(false);
+          }}
+          accessible={false}
+        >
           <View className="flex-1 bg-white justify-between">
             <View className="px-8 pt-16 flex-1">
               <TouchableOpacity
@@ -234,7 +240,10 @@ export default function LoginScreen() {
               {/* 6-digit display */}
               <TouchableOpacity
                 activeOpacity={1}
-                onPress={() => otpInputRef.current?.focus()}
+                onPress={() => {
+                  setShowKeypad(true);
+                  otpInputRef.current?.focus();
+                }}
                 className="flex-row justify-between mb-12 px-4 relative"
               >
                 {[0, 1, 2, 3, 4, 5].map((index) => (
@@ -269,22 +278,36 @@ export default function LoginScreen() {
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={handleSendOTP}
-                className="mb-6"
-                disabled={isLoading}
-              >
-                <Text className="text-[#0047AB] text-center font-outfit-medium">
-                  Resend code
-                </Text>
-              </TouchableOpacity>
+              <View className="mb-4">
+                <Button
+                  className="bg-blue-700 rounded-xl mb-6"
+                  size="lg"
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    handleVerifyOTP();
+                  }}
+                  isLoading={isLoading}
+                >
+                  Verify
+                </Button>
+                <TouchableOpacity
+                  onPress={handleSendOTP}
+                  className="mb-6"
+                  disabled={isLoading}
+                >
+                  <Text className="text-[#0047AB] text-center font-outfit-medium">
+                    Resend code
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <NumericKeypad
-              onKeyPress={handleOtpKeyPress}
-              onDelete={handleOtpDelete}
-              onSubmit={() => handleVerifyOTP()}
-            />
+            {showKeypad && (
+              <NumericKeypad
+                onKeyPress={handleOtpKeyPress}
+                onDelete={handleOtpDelete}
+              />
+            )}
           </View>
         </TouchableWithoutFeedback>
       ) : (
