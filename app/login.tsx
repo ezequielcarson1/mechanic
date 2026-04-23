@@ -449,7 +449,7 @@ export default function LoginScreen() {
                       </View>
                       <Input
                         placeholder="(000) 000-0000"
-                        containerClassName="flex-1 h-[52px] pt-2"
+                        containerClassName="flex-1"
                         keyboardType="phone-pad"
                         value={phoneNumber}
                         onChangeText={handlePhoneChange}
@@ -460,7 +460,9 @@ export default function LoginScreen() {
                 </View>
 
                 <Button
-                  onPress={method === "email" ? handleEmailLogin : handleSendOTP}
+                  onPress={
+                    method === "email" ? handleEmailLogin : handleSendOTP
+                  }
                   size="lg"
                   className="border-white/40 border bg-blue-600/20 backdrop-blur-sm h-[52px]"
                   isLoading={isLoading}

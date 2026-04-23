@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    TextInput,
-    TextInputProps,
-    TouchableOpacity,
-    View,
+  TextInput,
+  TextInputProps,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 interface InputProps extends TextInputProps {
@@ -26,16 +26,21 @@ export function Input({
   return (
     <View
       className={cn(
-        "flex-row items-center bg-white rounded-xl px-4 py-3",
+        "flex-row items-center bg-white rounded-xl px-4",
         containerClassName,
       )}
+      style={{ height: 52 }}
     >
       {leftIcon && <View className="mr-3">{leftIcon}</View>}
       <TextInput
         className={cn(
-          "flex-1 self-center font-outfit-medium text-black text-base",
+          "flex-1 font-outfit-medium text-black text-base",
           className,
         )}
+        style={{
+          height: "100%",
+          paddingBottom: 5,
+        }}
         secureTextEntry={isPassword && !showPassword}
         placeholderTextColor="#9CA3AF"
         {...props}
