@@ -12,10 +12,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.pixel.mechanic",
       "googleServicesFile": "./firebase/GoogleService-Info.plist",
-      "entitlements": {
-        "aps-environment": "production",
-        "com.apple.developer.applesignin": ["Default"]
-      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
