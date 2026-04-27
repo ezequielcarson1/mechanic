@@ -2,6 +2,7 @@ import { useUser } from '@/context/UserContext';
 import { appointmentDAO } from '@/lib/dao/AppointmentDAO';
 import { assistanceDAO } from '@/lib/dao/AssistanceDAO';
 import { AssistanceRequest } from '@/lib/dao/interfaces';
+import { ConfigService } from '@/lib/config/ConfigService';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { useSocket } from './SocketContext';
 
@@ -106,7 +107,11 @@ export function AppointmentsProvider({ children }: { children: ReactNode }) {
                     userId: req.userId,
                     zip: req.zip,
                     mechanicId: req.mechanicId,
-                    photos: typeof req.photos === 'string' ? JSON.parse(req.photos) : req.photos || [],
+                    photos: (() => {
+                        const raw: string[] = typeof req.photos === 'string' ? JSON.parse(req.photos) : req.photos || [];
+                        const base = ConfigService.getApiBaseUrl();
+                        return raw.map((p: string) => p.startsWith('http') ? p : `${base}${p}`);
+                    })(),
                     locationLat: req.locationLat,
                     locationLng: req.locationLng
                 }));
