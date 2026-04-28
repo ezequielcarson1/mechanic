@@ -5,15 +5,15 @@ import { getSetupProgress, saveSetupProgress } from "@/lib/storage";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function AddressScreen() {
@@ -44,9 +44,13 @@ export default function AddressScreen() {
         if (progress.address.home) setHomeData(progress.address.home);
         if (progress.address.work) setWorkData(progress.address.work);
         if (progress.address.type) setAddressType(progress.address.type);
-        
+
         // Migrate old data structure if found
-        if (!progress.address.home && !progress.address.work && progress.address.street) {
+        if (
+          !progress.address.home &&
+          !progress.address.work &&
+          progress.address.street
+        ) {
           const legacyAddress = {
             street: progress.address.street || "",
             apartment: progress.address.apartment || "",
@@ -144,10 +148,10 @@ export default function AddressScreen() {
 
   const handleContinue = async () => {
     // Save all address data
-    await saveSetupProgress("address", { 
-      type: addressType, 
-      home: homeData, 
-      work: workData 
+    await saveSetupProgress("address", {
+      type: addressType,
+      home: homeData,
+      work: workData,
     });
 
     // Check role to decide next step
@@ -155,7 +159,7 @@ export default function AddressScreen() {
     const role = progress.role?.role;
 
     if (role === "user") {
-      router.push("/setup/dealer-info");
+      router.push("/setup/vehicle-info");
     } else {
       router.push("/setup/credentials");
     }
