@@ -1,4 +1,5 @@
 import { apiClient } from '../api/apiClient';
+import { ConfigService } from '../config/ConfigService';
 import { AssistanceRequest, IAssistanceDAO } from './interfaces';
 
 export class AssistanceDAO implements IAssistanceDAO {
@@ -36,7 +37,9 @@ export class AssistanceDAO implements IAssistanceDAO {
         formData.append('photo', { uri: localUri, type: mimeType, name: filename } as any);
 
         const result = await apiClient.upload<{ key: string; url: string }>('/api/photos/upload', formData);
-        return result.url;
+        // Media service returns a relative path (/uploads/filename); make it absolute
+        const baseUrl = ConfigService.getApiBaseUrl();
+        return result.url.startsWith('http') ? result.url : `${baseUrl}${result.url}`;
     }
 }
 
