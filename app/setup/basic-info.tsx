@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/Button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Input } from "@/components/ui/Input";
+import { mediaDAO } from "@/lib/dao/MediaDAO";
 import { saveSetupProgress } from "@/lib/storage";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -28,6 +31,8 @@ export default function BasicInfoScreen() {
     confirmPassword: "",
     profileImage: "" as string | null,
   });
+  const [localProfileUri, setLocalProfileUri] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const passwordContainerRef = useRef<View>(null);
@@ -53,12 +58,20 @@ export default function BasicInfoScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
-      base64: true, // Useful for storing in DB if we want simple implementation
     });
 
-    if (!result.canceled) {
-      const imageUri = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      setFormData((prev) => ({ ...prev, profileImage: imageUri }));
+    if (result.canceled) return;
+    const localUri = result.assets[0].uri;
+    setLocalProfileUri(localUri);
+    setIsUploadingPhoto(true);
+    try {
+      const uploaded = await mediaDAO.uploadPhoto(localUri);
+      setFormData((prev) => ({ ...prev, profileImage: uploaded.url }));
+    } catch {
+      Alert.alert("Upload Failed", "Could not upload profile photo. Please try again.");
+      setLocalProfileUri(null);
+    } finally {
+      setIsUploadingPhoto(false);
     }
   };
 
@@ -140,24 +153,24 @@ export default function BasicInfoScreen() {
         <View className="flex-row items-center mb-8">
           <TouchableOpacity
             onPress={pickImage}
+            disabled={isUploadingPhoto}
             className="w-24 h-24 bg-blue-50 rounded-full items-center justify-center border-2 border-dashed border-blue-200 mr-4 relative overflow-hidden"
           >
-            {formData.profileImage ? (
-              <Image
-                source={{ uri: formData.profileImage }}
-                className="w-full h-full"
-              />
+            {localProfileUri ? (
+              <Image source={{ uri: localProfileUri }} className="w-full h-full" />
             ) : (
-              <Ionicons
-                name="camera"
-                size={32}
-                color="#0047AB"
-                style={{ opacity: 0.5 }}
-              />
+              <Ionicons name="camera" size={32} color="#0047AB" style={{ opacity: 0.5 }} />
             )}
-            <View className="absolute bottom-1 right-1 bg-white rounded-full p-1.5 border border-blue-100 shadow-sm">
-              <Ionicons name="pencil" size={12} color="#0047AB" />
-            </View>
+            {isUploadingPhoto && (
+              <View className="absolute inset-0 bg-black/40 items-center justify-center">
+                <ActivityIndicator color="#fff" />
+              </View>
+            )}
+            {!isUploadingPhoto && (
+              <View className="absolute bottom-1 right-1 bg-white rounded-full p-1.5 border border-blue-100 shadow-sm">
+                <Ionicons name="pencil" size={12} color="#0047AB" />
+              </View>
+            )}
           </TouchableOpacity>
           <View>
             <Text className="font-outfit-bold text-[#0F172A] text-lg">
@@ -290,6 +303,7 @@ export default function BasicInfoScreen() {
 
         <Button
           onPress={handleContinue}
+          disabled={isUploadingPhoto}
           size="lg"
           className="bg-blue-700 rounded-xl"
         >

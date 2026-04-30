@@ -1,4 +1,5 @@
 import { apiClient } from '../api/apiClient';
+import { ConfigService } from '../config/ConfigService';
 
 interface UploadedPhoto {
   key: string;
@@ -33,7 +34,14 @@ class MediaDAOImpl {
       type,
     } as any);
 
-    return apiClient.upload<UploadedPhoto>('/api/photos/upload', formData);
+    const result = await apiClient.upload<UploadedPhoto>('/api/photos/upload', formData);
+
+    if (result.url?.startsWith('/')) {
+      const base = ConfigService.getApiBaseUrl();
+      result.url = `${base}${result.url}`;
+    }
+
+    return result;
   }
 }
 
