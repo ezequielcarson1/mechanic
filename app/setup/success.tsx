@@ -103,7 +103,7 @@ export default function SuccessScreen() {
             <View className="bg-blue-50/50 p-6 rounded-xl mb-12 w-full">
                 <Text className="text-[#0F172A] font-outfit-regular text-center leading-6">
                     Book your demo/burden road test.{"\n"}
-                    ASE membership need to be verified.{"\n\n"}
+                    {/* ASE membership need to be verified.{"\n\n"} */}
                     We will notify you as soon as this process is complete.
                 </Text>
             </View>

@@ -20,7 +20,7 @@ export default function SetupLayout() {
                 },
                 headerTitleAlign: 'center',
                 headerLeft: () => (
-                    <TouchableOpacity onPress={() => router.back()} className="p-2">
+                    <TouchableOpacity onPress={() => router.back()} className="p-2" style={{ backgroundColor: 'transparent'}}>
                         <Ionicons name="arrow-back" size={24} color="#1F2937" />
                     </TouchableOpacity>
                 ),
@@ -35,8 +35,8 @@ export default function SetupLayout() {
                 options={{
                     title: 'Account Set-up',
                     headerRight: () => (
-                        <TouchableOpacity onPress={() => router.push('/setup/credentials')}>
-                            <Text className="text-[#0047AB] font-outfit-medium">Skip</Text>
+                        <TouchableOpacity onPress={() => router.push('/setup/credentials')} style={{ backgroundColor: 'transparent'}}>
+                            <Text className="text-[#0047AB] font-outfit-medium" >Skip</Text>
                         </TouchableOpacity>
                     )
                 }}
@@ -47,7 +47,7 @@ export default function SetupLayout() {
                 options={{
                     title: 'Account Set-up',
                     headerRight: () => (
-                        <TouchableOpacity onPress={() => router.push('/setup/expertise')}>
+                        <TouchableOpacity onPress={() => router.push('/setup/expertise')} style={{ backgroundColor: 'transparent'}}>
                             <Text className="text-[#0047AB] font-outfit-medium">Skip</Text>
                         </TouchableOpacity>
                     )
@@ -58,7 +58,7 @@ export default function SetupLayout() {
                 options={{
                     title: 'Account Set-up',
                     headerRight: () => (
-                        <TouchableOpacity onPress={() => router.push('/setup/availability')}>
+                        <TouchableOpacity onPress={() => router.push('/setup/availability')} style={{ backgroundColor: 'transparent'}}>
                             <Text className="text-[#0047AB] font-outfit-medium">Skip</Text>
                         </TouchableOpacity>
                     )
@@ -69,7 +69,7 @@ export default function SetupLayout() {
                 options={{
                     title: 'Account Set-up',
                     headerRight: () => (
-                        <TouchableOpacity onPress={() => router.push('/setup/success')}>
+                        <TouchableOpacity onPress={() => router.push('/setup/success')} style={{ backgroundColor: 'transparent'}}>
                             <Text className="text-[#0047AB] font-outfit-medium">Skip</Text>
                         </TouchableOpacity>
                     )

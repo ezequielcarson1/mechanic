@@ -283,10 +283,12 @@ export default function AddressScreen() {
               </Text>
               <TouchableOpacity
                 onPress={() => setShowStateModal(true)}
-                className="bg-blue-50/50 rounded-xl h-12 justify-center px-4"
+                className="bg-blue-50/50 rounded-xl h-12 justify-center px-4 py-7"
+                style={{ height: 52,justifyContent: "center" }}
               >
                 <Text
                   className={`font-outfit-medium ${formData.state ? "text-[#0F172A]" : "text-gray-400"}`}
+                  style={{ lineHeight: 25 }}
                 >
                   {formData.state || "Select"}
                 </Text>

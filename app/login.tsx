@@ -464,7 +464,7 @@ export default function LoginScreen() {
                     method === "email" ? handleEmailLogin : handleSendOTP
                   }
                   size="lg"
-                  className="border-white/40 border bg-blue-600/20 backdrop-blur-sm h-[52px]"
+                  className="border-white/40 border bg-blue-600/20 backdrop-blur-sm"
                   isLoading={isLoading}
                 >
                   Login
