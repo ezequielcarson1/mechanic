@@ -37,7 +37,7 @@ class MediaDAOImpl {
     const result = await apiClient.upload<UploadedPhoto>('/api/photos/upload', formData);
 
     if (result.url?.startsWith('/')) {
-      const base = ConfigService.getApiBaseUrl();
+      const base = ConfigService.getApiBaseUrl().replace(/\/+$/, '');
       result.url = `${base}${result.url}`;
     }
 

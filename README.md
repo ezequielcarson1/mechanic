@@ -180,7 +180,7 @@ The application features a dynamic environment configuration system powered by `
 
 ### Endpoints
 The configuration provides dynamic URLs for the REST API and WebSockets:
-- **PROD**: Defaults to `http://20.124.131.193:3000` (API) and `ws://20.124.131.193:3000` (WS)
+- **PROD**: Defaults to `https://t9smggmz3a.us-east-1.awsapprunner.com` (API) and `wss://t9smggmz3a.us-east-1.awsapprunner.com` (WS)
 - **DEV**: Defaults to `http://localhost:3000` (API) and `ws://localhost:3000` (WS)
 
 ### Environment Selector UI

@@ -52,7 +52,7 @@ npm run local    # Sync prod users → build images → copy DB into pod → res
 ### Admin Portal dev server
 The admin portal vite dev server proxy target is controlled by `admin-portal/.env.local` (gitignored):
 - `npm run local` writes `ADMIN_API_TARGET=http://192.168.1.229:3000` → dev server hits local backend
-- `npm run upload` writes `ADMIN_API_TARGET=http://20.124.131.193:3000` → dev server hits prod backend
+- `npm run upload` writes `ADMIN_API_TARGET=https://t9smggmz3a.us-east-1.awsapprunner.com` → dev server hits prod backend
 - Docker/k8s deployments are unaffected (nginx proxies `/api` to `http://server:3000` internally)
 
 ---
@@ -62,7 +62,7 @@ The admin portal vite dev server proxy target is controlled by `admin-portal/.en
 ### Config / Endpoints (`lib/config/ConfigService.ts`)
 On startup, fetches config from `https://bootstrap.mechanicapp.com/config`, caches in AsyncStorage, falls back to `DEFAULT_FALLBACK_CONFIG`. All code uses `ConfigService.getApiBaseUrl()` and `ConfigService.getWsUrl()` — never hardcode endpoints.
 
-- PROD defaults: `http://20.124.131.193:3000` (API + WS)
+- PROD defaults: `https://t9smggmz3a.us-east-1.awsapprunner.com` (API + WS)
 - DEV defaults: `http://192.168.1.229:3000` (local LAN — iOS/Android real device) / `http://localhost:3000` (iOS sim) / `http://10.0.2.2:3000` (Android emulator)
 
 If the backend returns `allowEnvSwitch: true`, an `EnvSelector` toggle appears on the Login screen. Switching env auto-reconnects the WebSocket (`SocketContext` has a listener).
@@ -176,7 +176,7 @@ The `users.isOnline` column is updated purely through WebSocket events — no po
 
 ### Admin Portal (`admin-portal/`)
 SPA with react-router-dom + axios. Use `VITE_*` env vars for API URLs.
-- `VITE_API_BASE_URL` — HTTP API base (e.g. `http://20.124.131.193:3000/api`); WS URL is auto-derived from it
+- `VITE_API_BASE_URL` — HTTP API base (e.g. `https://t9smggmz3a.us-east-1.awsapprunner.com/api`); WS URL is auto-derived from it
 - `VITE_ADMIN_PASSWORD` — admin login password (default: `admin123`)
 
 ### Firebase Phone Auth (`lib/firebase/auth.ts`)
