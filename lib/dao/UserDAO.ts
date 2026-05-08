@@ -26,6 +26,11 @@ export class UserDAO implements IUserDAO {
         return result.user ?? null;
     }
 
+    async checkEmailExists(email: string): Promise<boolean> {
+        const result = await apiClient.get<{ exists: boolean }>(`/api/users/check-email/${encodeURIComponent(email)}`);
+        return result.exists;
+    }
+
     async checkPhoneExists(phone: string): Promise<boolean> {
         const result = await apiClient.get<{ exists: boolean }>(`/api/users/check-phone/${encodeURIComponent(phone)}`);
         return result.exists;

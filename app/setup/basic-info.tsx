@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Input } from "@/components/ui/Input";
+import { useEmailAvailability } from "@/hooks/useEmailAvailability";
 import { mediaDAO } from "@/lib/dao/MediaDAO";
 import { saveSetupProgress } from "@/lib/storage";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,6 +34,7 @@ export default function BasicInfoScreen() {
   });
   const [localProfileUri, setLocalProfileUri] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const emailStatus = useEmailAvailability(formData.email);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const passwordContainerRef = useRef<View>(null);
@@ -124,7 +126,7 @@ export default function BasicInfoScreen() {
     formData.password === formData.confirmPassword;
 
   const handleContinue = async () => {
-    if (!pwResult.success || !ruleMatch) return;
+    if (!pwResult.success || !ruleMatch || emailStatus === 'taken' || emailStatus === 'checking') return;
     await saveSetupProgress("basicInfo", formData);
     router.push("/setup/identity"); // Navigate to Identity next per user instruction
   };
@@ -223,6 +225,18 @@ export default function BasicInfoScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            {emailStatus === 'checking' && (
+              <Text className="font-outfit-regular text-xs text-slate-400 mt-1">Checking availability…</Text>
+            )}
+            {emailStatus === 'taken' && (
+              <Text className="font-outfit-regular text-xs text-red-500 mt-1">Email already registered</Text>
+            )}
+            {emailStatus === 'available' && (
+              <Text className="font-outfit-regular text-xs text-green-600 mt-1">Email available</Text>
+            )}
+            {emailStatus === 'error' && (
+              <Text className="font-outfit-regular text-xs text-orange-500 mt-1">Could not verify email</Text>
+            )}
           </View>
 
           <View>
