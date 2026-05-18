@@ -40,5 +40,5 @@ export default function Index() {
     if (isLoading || !checked) return null;
     if (user) return <Redirect href="/(tabs)/assist" />;
     if (resumeRoute) return <Redirect href={resumeRoute as any} />;
-    return <Redirect href="/onboarding" />;
+    return <Redirect href="/setup" />;
 }
