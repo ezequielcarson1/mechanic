@@ -1,18 +1,25 @@
-import { useUser } from '@/context/UserContext';
-import { Tabs, useNavigation, useRouter } from 'expo-router';
-import { Bell, Calendar, ChevronLeft, LifeBuoy, User as UserIcon, Wrench } from 'lucide-react-native';
-import React from 'react';
-import { Image, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { useUser } from "@/context/UserContext";
+import { Tabs, useNavigation, useRouter } from "expo-router";
+import {
+  Bell,
+  Calendar,
+  ChevronLeft,
+  LifeBuoy,
+  User as UserIcon,
+  Wrench,
+} from "lucide-react-native";
+import React from "react";
+import { Image, Platform, TouchableOpacity, View } from "react-native";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { HapticTab } from "@/components/haptic-tab";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export function NotificationHeaderRight() {
   const router = useRouter();
 
   return (
     <TouchableOpacity
-      onPress={() => router.push('/(tabs)/notifications')}
+      onPress={() => router.push("/(tabs)/notifications")}
       style={{ marginRight: 16 }}
       className="justify-center items-center"
     >
@@ -24,7 +31,10 @@ export function NotificationHeaderRight() {
 function ProfileTabIcon({ color }: { color: string }) {
   const { user } = useUser();
   return (
-    <View className="w-7 h-7 rounded-full bg-blue-50 justify-center items-center overflow-hidden" style={{ borderColor: color, borderWidth: 1 }}>
+    <View
+      className="w-7 h-7 rounded-full bg-blue-50 justify-center items-center overflow-hidden"
+      style={{ borderColor: color, borderWidth: 1 }}
+    >
       {user?.profileImage ? (
         <Image source={{ uri: user.profileImage }} className="w-full h-full" />
       ) : (
@@ -43,51 +53,57 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#0047AB',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarActiveTintColor: "#0047AB",
+        tabBarInactiveTintColor: "#8E8E93",
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: "#FFFFFF",
           borderTopWidth: 1,
-          borderTopColor: '#E5E5E5',
-          height: Platform.OS === 'ios' ? 88 : 68,
+          borderTopColor: "#E5E5E5",
+          height: Platform.OS === "ios" ? 88 : 68,
           paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          paddingBottom: Platform.OS === "ios" ? 28 : 8,
         },
         headerShown: true,
-        headerTitleAlign: 'center',
-        headerTintColor: '#0047AB',
+        headerTitleAlign: "center",
+        headerTintColor: "#0047AB",
         headerTitleStyle: {
-          fontFamily: 'Outfit_700Bold',
+          fontFamily: "Outfit_700Bold",
           fontSize: 18,
         },
         headerLeft: () => (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 16 }}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{ marginLeft: 16 }}
+          >
             <ChevronLeft size={24} color="#0047AB" />
           </TouchableOpacity>
         ),
         tabBarButton: HapticTab,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="assist"
         options={{
-          title: 'Dashboard',
+          title: "Dashboard",
           tabBarIcon: ({ color }) => <LifeBuoy size={24} color={color} />,
           headerLeft: () => null,
           headerRight: () => <NotificationHeaderRight />,
         }}
       />
-      <Tabs.Screen
-        name="request-assistance"
-        options={{
-          title: 'Assistance',
-          tabBarIcon: ({ color }) => <Wrench size={24} color={color} />,
-          headerShown: false,
-        }}
-      />
+      {user?.role !== "mechanic" && (
+        <Tabs.Screen
+          name="request-assistance"
+          options={{
+            title: "Assistance",
+            tabBarIcon: ({ color }) => <Wrench size={24} color={color} />,
+            headerShown: false,
+          }}
+        />
+      )}
       <Tabs.Screen
         name="appointments"
         options={{
-          title: 'Appointments',
+          title: "Appointments",
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
           headerLeft: () => null,
           headerRight: () => <NotificationHeaderRight />,
@@ -97,7 +113,7 @@ export default function TabLayout() {
         name="notifications"
         options={{
           href: null,
-          title: 'Notifications',
+          title: "Notifications",
           tabBarIcon: ({ color }) => <Bell size={24} color={color} />,
           headerLeft: () => null,
           headerRight: () => <NotificationHeaderRight />,
@@ -106,7 +122,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Profile',
+          title: "Profile",
           tabBarIcon: ({ color }) => <ProfileTabIcon color={color} />,
           headerLeft: () => null, // Hide back button on root tab
           headerRight: () => <NotificationHeaderRight />,
@@ -114,21 +130,142 @@ export default function TabLayout() {
       />
 
       {/* Hidden Profile Routes */}
-      <Tabs.Screen name="personal-info" options={{ href: null, title: 'Profile', headerLeft: () => <TouchableOpacity onPress={() => router.navigate('/(tabs)')} style={{ marginLeft: 16 }}><ChevronLeft size={24} color="#0047AB" /></TouchableOpacity> }} />
-      <Tabs.Screen name="ase" options={{ href: null, title: 'Profile', headerLeft: () => <TouchableOpacity onPress={() => router.navigate('/(tabs)')} style={{ marginLeft: 16 }}><ChevronLeft size={24} color="#0047AB" /></TouchableOpacity> }} />
-      <Tabs.Screen name="payments" options={{ href: null, title: 'Profile', headerLeft: () => <TouchableOpacity onPress={() => router.navigate('/(tabs)')} style={{ marginLeft: 16 }}><ChevronLeft size={24} color="#0047AB" /></TouchableOpacity> }} />
-      <Tabs.Screen name="promotions" options={{ href: null, title: 'Profile', headerLeft: () => <TouchableOpacity onPress={() => router.navigate('/(tabs)')} style={{ marginLeft: 16 }}><ChevronLeft size={24} color="#0047AB" /></TouchableOpacity> }} />
-      <Tabs.Screen name="help" options={{ href: null, title: 'Profile', headerLeft: () => <TouchableOpacity onPress={() => router.navigate('/(tabs)')} style={{ marginLeft: 16 }}><ChevronLeft size={24} color="#0047AB" /></TouchableOpacity> }} />
-      <Tabs.Screen name="privacy" options={{ href: null, title: 'Profile', headerLeft: () => <TouchableOpacity onPress={() => router.navigate('/(tabs)')} style={{ marginLeft: 16 }}><ChevronLeft size={24} color="#0047AB" /></TouchableOpacity> }} />
-      <Tabs.Screen name="settings" options={{ href: null, headerShown: false }} />
-      <Tabs.Screen name="live-chat" options={{ href: null, title: 'Profile', headerLeft: () => <TouchableOpacity onPress={() => router.navigate('/(tabs)')} style={{ marginLeft: 16 }}><ChevronLeft size={24} color="#0047AB" /></TouchableOpacity> }} />
-      <Tabs.Screen name="vehicles" options={{ href: null, title: 'Profile', headerLeft: () => <TouchableOpacity onPress={() => router.navigate('/(tabs)')} style={{ marginLeft: 16 }}><ChevronLeft size={24} color="#0047AB" /></TouchableOpacity> }} />
+      <Tabs.Screen
+        name="personal-info"
+        options={{
+          href: null,
+          title: "Profile",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.navigate("/(tabs)")}
+              style={{ marginLeft: 16 }}
+            >
+              <ChevronLeft size={24} color="#0047AB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ase"
+        options={{
+          href: null,
+          title: "Profile",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.navigate("/(tabs)")}
+              style={{ marginLeft: 16 }}
+            >
+              <ChevronLeft size={24} color="#0047AB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="payments"
+        options={{
+          href: null,
+          title: "Profile",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.navigate("/(tabs)")}
+              style={{ marginLeft: 16 }}
+            >
+              <ChevronLeft size={24} color="#0047AB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="promotions"
+        options={{
+          href: null,
+          title: "Profile",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.navigate("/(tabs)")}
+              style={{ marginLeft: 16 }}
+            >
+              <ChevronLeft size={24} color="#0047AB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="help"
+        options={{
+          href: null,
+          title: "Profile",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.navigate("/(tabs)")}
+              style={{ marginLeft: 16 }}
+            >
+              <ChevronLeft size={24} color="#0047AB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="privacy"
+        options={{
+          href: null,
+          title: "Profile",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.navigate("/(tabs)")}
+              style={{ marginLeft: 16 }}
+            >
+              <ChevronLeft size={24} color="#0047AB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{ href: null, headerShown: false }}
+      />
+      <Tabs.Screen
+        name="live-chat"
+        options={{
+          href: null,
+          title: "Profile",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.navigate("/(tabs)")}
+              style={{ marginLeft: 16 }}
+            >
+              <ChevronLeft size={24} color="#0047AB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="vehicles"
+        options={{
+          href: null,
+          title: "Profile",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.navigate("/(tabs)")}
+              style={{ marginLeft: 16 }}
+            >
+              <ChevronLeft size={24} color="#0047AB" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
 
       {/* Hidden deep-nav routes — keep tab bar visible */}
       <Tabs.Screen name="chat" options={{ href: null, headerShown: false }} />
       <Tabs.Screen name="call" options={{ href: null, headerShown: false }} />
-      <Tabs.Screen name="video-lobby" options={{ href: null, headerShown: false }} />
-      <Tabs.Screen name="video-call" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen
+        name="video-lobby"
+        options={{ href: null, headerShown: false }}
+      />
+      <Tabs.Screen
+        name="video-call"
+        options={{ href: null, headerShown: false }}
+      />
     </Tabs>
   );
 }
