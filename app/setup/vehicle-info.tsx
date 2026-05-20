@@ -189,11 +189,11 @@ export default function VehicleInfoScreen() {
               className={`flex-row items-center p-5 rounded-2xl mb-4 border-2 ${index === 0 ? "border-blue-600" : "border-slate-100 bg-slate-50/50"}`}
             >
               <View className="w-12 h-12 bg-white rounded-full items-center justify-center mr-4 border border-slate-100 shadow-sm overflow-hidden">
-                <Image
+                {/* <Image
                   source={{ uri: getVehicleLogoUrl(v.make) }}
                   className="w-8 h-8"
                   resizeMode="contain"
-                />
+                /> */}
               </View>
               <View className="flex-1">
                 <Text className="text-lg font-outfit-bold text-[#0F172A] uppercase">
@@ -309,13 +309,13 @@ export default function VehicleInfoScreen() {
               className="bg-blue-50/50 h-12 flex-row items-center justify-between px-4 rounded-xl"
             >
               <View className="flex-row items-center gap-2">
-                {formData.make !== "Select" && (
+                {/* {formData.make !== "Select" && (
                   <Image
                     source={{ uri: getVehicleLogoUrl(formData.make) }}
                     className="w-5 h-5"
                     resizeMode="contain"
                   />
-                )}
+                )} */}
                 <Text className="text-[#0F172A] font-outfit-regular">
                   {formData.make}
                 </Text>
@@ -489,11 +489,11 @@ export default function VehicleInfoScreen() {
                           setMakeSearchQuery("");
                         }}
                       >
-                        <Image
+                        {/* <Image
                           source={{ uri: getVehicleLogoUrl(make) }}
                           className="w-6 h-6"
                           resizeMode="contain"
-                        />
+                        /> */}
                         <Text
                           className={`text-lg font-outfit-medium ${formData.make === make ? "text-blue-600" : "text-[#0F172A]"}`}
                         >
