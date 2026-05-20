@@ -1,5 +1,5 @@
 import { useUser } from "@/context/UserContext";
-import { Tabs, useNavigation, useRouter } from "expo-router";
+import { Tabs, useNavigation, useRouter, usePathname } from "expo-router";
 import {
   Bell,
   Calendar,
@@ -49,6 +49,9 @@ export default function TabLayout() {
   const navigation = useNavigation();
   const router = useRouter();
   const { user } = useUser();
+  const pathname = usePathname();
+
+  const isRequestAssistanceRoot = pathname === "/request-assistance" || pathname === "/request-assistance/";
 
   return (
     <Tabs
@@ -96,7 +99,9 @@ export default function TabLayout() {
           options={{
             title: "Assistance",
             tabBarIcon: ({ color }) => <Wrench size={24} color={color} />,
-            headerShown: false,
+            headerShown: isRequestAssistanceRoot,
+            headerLeft: () => null,
+            headerRight: () => <NotificationHeaderRight />,
           }}
         />
       )}
