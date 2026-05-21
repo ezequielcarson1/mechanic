@@ -93,18 +93,17 @@ export default function TabLayout() {
           headerRight: () => <NotificationHeaderRight />,
         }}
       />
-      {user?.role !== "mechanic" && (
-        <Tabs.Screen
-          name="request-assistance"
-          options={{
-            title: "Assistance",
-            tabBarIcon: ({ color }) => <Wrench size={24} color={color} />,
-            headerShown: isRequestAssistanceRoot,
-            headerLeft: () => null,
-            headerRight: () => <NotificationHeaderRight />,
-          }}
-        />
-      )}
+      <Tabs.Screen
+        name="request-assistance"
+        options={{
+          href: user?.role === "mechanic" ? null : undefined,
+          title: "Assistance",
+          tabBarIcon: ({ color }) => <Wrench size={24} color={color} />,
+          headerShown: isRequestAssistanceRoot,
+          headerLeft: () => null,
+          headerRight: () => <NotificationHeaderRight />,
+        }}
+      />
       <Tabs.Screen
         name="appointments"
         options={{
