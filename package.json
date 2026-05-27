@@ -24,6 +24,9 @@
     "test:e2e:report": "npx playwright show-report e2e/report"
   },
   "dependencies": {
+    "@config-plugins/react-native-webrtc": "^14.0.0",
+    "@daily-co/react-native-daily-js": "^0.85.0",
+    "@daily-co/react-native-webrtc": "^124.0.6-daily.2",
     "@expo-google-fonts/outfit": "^0.4.3",
     "@expo/vector-icons": "^15.0.3",
     "@invertase/react-native-apple-authentication": "^2.5.1",
@@ -61,7 +64,9 @@
     "react-dom": "19.1.0",
     "react-leaflet": "^5.0.0",
     "react-native": "0.81.5",
+    "react-native-background-timer": "^2.4.1",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-get-random-values": "~1.11.0",
     "react-native-maps": "1.20.1",
     "react-native-qrcode-svg": "^6.3.21",
     "react-native-reanimated": "~4.1.1",
