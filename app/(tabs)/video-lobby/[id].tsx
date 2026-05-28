@@ -149,9 +149,13 @@ export default function VideoLobbyScreen() {
     const handleJoinCall = useCallback(async () => {
         if (!roomUrl) return;
         try {
-            const data = await apiClient.get<{ roomUrl: string; token: string }>(
+            const data = await apiClient.get<{ roomUrl: string; token: string | null }>(
                 `/api/video-room/${appointmentId}?participantName=${encodeURIComponent(participantName)}&role=${participantRole}`
             );
+            if (!data.token) {
+                Alert.alert('Error', 'The video room has expired. Please ask the user to start a new call.');
+                return;
+            }
             router.push({
                 pathname: '/video-call/[id]' as any,
                 params: { id: appointmentId, roomUrl: data.roomUrl, token: data.token }

@@ -42,12 +42,13 @@ export default function VideoCallScreen() {
     router.back();
   };
 
-  const localStream = localParticipant?.videoTrack
-    ? new MediaStream([localParticipant.videoTrack])
-    : null;
-  const remoteStream = remoteParticipant?.videoTrack
-    ? new MediaStream([remoteParticipant.videoTrack])
-    : null;
+  const buildStream = (p: typeof localParticipant) => {
+    const track = p?.tracks?.video?.persistentTrack;
+    const state = p?.tracks?.video?.state;
+    return track && state === 'playable' ? new MediaStream([track as unknown as never]) : null;
+  };
+  const localStream = buildStream(localParticipant);
+  const remoteStream = buildStream(remoteParticipant);
 
   if (!urlStr || callState === 'error') {
     return (
@@ -92,7 +93,7 @@ export default function VideoCallScreen() {
           <VideoTile
             stream={remoteStream}
             name={remoteParticipant.user_name || 'Participant'}
-            isCameraOff={!remoteParticipant.video}
+            isCameraOff={remoteParticipant.tracks?.video?.state !== 'playable'}
             isLocal={false}
           />
         ) : (
