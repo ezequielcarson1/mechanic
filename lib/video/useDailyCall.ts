@@ -58,29 +58,41 @@ export function useDailyCall(): UseDailyCall {
     }
   }, [syncParticipants]);
 
+  const teardown = useCallback(async (call: DailyCall) => {
+    // Remove all listeners we registered, swallow any per-listener errors.
+    try {
+      (call as any).off('joined-meeting');
+      (call as any).off('participant-joined');
+      (call as any).off('participant-updated');
+      (call as any).off('participant-left');
+      (call as any).off('error');
+    } catch { /* SDK may be mid-teardown */ }
+    try { await call.leave(); } catch { /* already gone is fine */ }
+    try { await call.destroy(); } catch { /* idempotent */ }
+  }, []);
+
   const leave = useCallback(async () => {
     const call = callRef.current;
     if (!call) return;
-    await call.leave();
-    await call.destroy();
     callRef.current = null;
+    await teardown(call);
     setCallState('idle');
-  }, []);
+  }, [teardown]);
 
   const toggleAudio = useCallback(() => {
     const call = callRef.current;
     if (!call) return;
-    const next = call.localAudio();
-    call.setLocalAudio(!next);
-    setIsAudioMuted(next);
+    const enabled = call.localAudio();
+    call.setLocalAudio(!enabled);
+    setIsAudioMuted(enabled); // muted = previously enabled (now off)
   }, []);
 
   const toggleCamera = useCallback(() => {
     const call = callRef.current;
     if (!call) return;
-    const next = call.localVideo();
-    call.setLocalVideo(!next);
-    setIsCameraOff(next);
+    const enabled = call.localVideo();
+    call.setLocalVideo(!enabled);
+    setIsCameraOff(enabled); // off = previously enabled (now off)
   }, []);
 
   const switchCamera = useCallback(() => {
@@ -90,9 +102,12 @@ export function useDailyCall(): UseDailyCall {
   useEffect(() => {
     return () => {
       const call = callRef.current;
-      if (call) { call.leave().finally(() => call.destroy()); callRef.current = null; }
+      if (!call) return;
+      callRef.current = null;
+      // Fire-and-forget on unmount; swallow rejections.
+      teardown(call).catch(() => {});
     };
-  }, []);
+  }, [teardown]);
 
   return {
     callState, localParticipant, remoteParticipant, isAudioMuted, isCameraOff, errorMessage,
