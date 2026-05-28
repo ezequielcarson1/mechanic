@@ -2,6 +2,7 @@ import { useUser } from '@/context/UserContext';
 import { appointmentDAO } from '@/lib/dao/AppointmentDAO';
 import { assistanceDAO } from '@/lib/dao/AssistanceDAO';
 import { AssistanceRequest } from '@/lib/dao/interfaces';
+import { ConfigService } from '@/lib/config/ConfigService';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { useSocket } from './SocketContext';
 
@@ -37,6 +38,7 @@ export interface Appointment {
     acceptedAt?: string;
     startedAt?: string;
     completedAt?: string;
+    updatedAt?: string;
     additionalFunds?: AdditionalFunds[];
     clientReview?: ClientReview;
     isReviewSubmitted?: boolean;
@@ -98,7 +100,7 @@ export function AppointmentsProvider({ children }: { children: ReactNode }) {
                     title: req.title,
                     date: req.date || 'Pending',
                     time: 'Pending',
-                    car: req.car, // Make sure to map car string correctly
+                    car: req.car,
                     address: req.address,
                     notes: req.notes,
                     budget: req.budget,
@@ -106,12 +108,23 @@ export function AppointmentsProvider({ children }: { children: ReactNode }) {
                     userId: req.userId,
                     zip: req.zip,
                     mechanicId: req.mechanicId,
-                    photos: typeof req.photos === 'string' ? JSON.parse(req.photos) : req.photos || [],
+                    updatedAt: (req as any).updatedAt,
+                    photos: (() => {
+                        const raw: string[] = typeof req.photos === 'string' ? JSON.parse(req.photos) : req.photos || [];
+                        const base = ConfigService.getApiBaseUrl();
+                        return raw.map((p: string) => p.startsWith('http') ? p : `${base}${p}`);
+                    })(),
                     locationLat: req.locationLat,
                     locationLng: req.locationLng
                 }));
 
-            setAppointments([...mappedAssistance, ...data]);
+            // Also map updatedAt from appointments table rows
+            const mappedData = data.map((appt: any) => ({
+                ...appt,
+                updatedAt: appt.updatedAt,
+            }));
+
+            setAppointments([...mappedAssistance, ...mappedData]);
 
             // GLOBAL NOTIFICATION LOGIC REMOVED
             // We will handle the alert in the Appointments screen instead.

@@ -1,115 +1,339 @@
-import { Button } from '@/components/ui/Button';
-import { saveSetupProgress } from '@/lib/storage';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Button } from "@/components/ui/Button";
+import { mediaDAO } from "@/lib/dao/MediaDAO";
+import { saveSetupProgress } from "@/lib/storage";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+    ActionSheetIOS,
+    ActivityIndicator,
+    Alert,
+    Image,
+    Platform,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type Side = "front" | "back";
+
+interface UploadedImage {
+  localUri: string;
+  remoteUrl: string;
+  remoteKey: string;
+}
+
+const DOCUMENT_TYPES = [
+  "Driving Licence",
+  "Passport",
+  "Residence Permit",
+  "National ID",
+];
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+async function pickFromCamera(): Promise<string | null> {
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== "granted") {
+    Alert.alert(
+      "Permission Required",
+      "Please allow camera access in your device settings to take a photo.",
+    );
+    return null;
+  }
+  const result = await ImagePicker.launchCameraAsync({
+    allowsEditing: true,
+    quality: 0.85,
+    base64: false,
+  });
+  return result.canceled ? null : result.assets[0].uri;
+}
+
+async function pickFromGallery(): Promise<string | null> {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ["images"],
+    allowsEditing: true,
+    quality: 0.85,
+    base64: false,
+  });
+  return result.canceled ? null : result.assets[0].uri;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function IdentityScreen() {
-    const router = useRouter();
-    const [documentType, setDocumentType] = useState('Select'); // Placeholder for dropdown
-    const [frontImage, setFrontImage] = useState<string | null>(null);
-    const [backImage, setBackImage] = useState<string | null>(null);
+  const router = useRouter();
+  const [documentType, setDocumentType] = useState<string | null>(null);
+  const [frontImage, setFrontImage] = useState<UploadedImage | null>(null);
+  const [backImage, setBackImage] = useState<UploadedImage | null>(null);
+  const [isUploading, setIsUploading] = useState<Side | null>(null);
 
-    const handleContinue = async () => {
-        // Add validation
-        await saveSetupProgress('identity', { documentType, frontImage, backImage });
-        router.push('/setup/address');
-    };
+  // ── Document type picker ────────────────────────────────────────────────────
+  const handleDocTypePicker = () => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [...DOCUMENT_TYPES, "Cancel"],
+          cancelButtonIndex: DOCUMENT_TYPES.length,
+          title: "Select Document Type",
+        },
+        (index) => {
+          if (index < DOCUMENT_TYPES.length)
+            setDocumentType(DOCUMENT_TYPES[index]);
+        },
+      );
+    } else {
+      Alert.alert(
+        "Select Document Type",
+        undefined,
+        DOCUMENT_TYPES.map((type) => ({
+          text: type,
+          onPress: () => setDocumentType(type),
+        })).concat([{ text: "Cancel", onPress: () => {} }]),
+      );
+    }
+  };
 
-    const handleTakePhoto = (side: 'front' | 'back') => {
-        // Simulate photo taking
-        if (side === 'front') setFrontImage('simulated_path_front');
-        else setBackImage('simulated_path_back');
-    };
+  // ── Upload photo to media-service ──────────────────────────────────────────
+  const uploadAndSetImage = async (localUri: string, side: Side) => {
+    setIsUploading(side);
+    try {
+      const result = await mediaDAO.uploadPhoto(localUri);
+      const uploaded: UploadedImage = {
+        localUri,
+        remoteUrl: result.url,
+        remoteKey: result.key,
+      };
+      if (side === "front") {
+        setFrontImage(uploaded);
+      } else {
+        setBackImage(uploaded);
+      }
+    } catch (error) {
+      console.error(`Failed to upload ${side} image:`, error);
+      Alert.alert(
+        "Upload Failed",
+        "Could not upload the photo. Please try again.",
+      );
+    } finally {
+      setIsUploading(null);
+    }
+  };
 
-    return (
-        <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
-            <View className="mb-6">
-                <Text className="text-xl font-outfit-bold text-[#0F172A] mb-1">Basic Info</Text>
-                <Text className="text-[#0047AB] font-outfit-medium text-base mb-4">Please upload your Identity Document information</Text>
+  // ── Photo picker (camera / gallery) ────────────────────────────────────────
+  const handlePickImage = (side: Side) => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ["Take Photo", "Choose from Gallery", "Cancel"],
+          cancelButtonIndex: 2,
+        },
+        async (index) => {
+          let uri: string | null = null;
+          if (index === 0) uri = await pickFromCamera();
+          else if (index === 1) uri = await pickFromGallery();
+          if (uri) await uploadAndSetImage(uri, side);
+        },
+      );
+    } else {
+      Alert.alert("Add Photo", undefined, [
+        {
+          text: "Take Photo",
+          onPress: async () => {
+            const uri = await pickFromCamera();
+            if (uri) await uploadAndSetImage(uri, side);
+          },
+        },
+        {
+          text: "Choose from Gallery",
+          onPress: async () => {
+            const uri = await pickFromGallery();
+            if (uri) await uploadAndSetImage(uri, side);
+          },
+        },
+        { text: "Cancel", style: "cancel" },
+      ]);
+    }
+  };
 
-                <Text className="text-[#0F172A] font-outfit-regular text-base mb-4">
-                    The following documents are accepted:
-                </Text>
-                <Text className="text-[#0F172A] font-outfit-regular text-base mb-4">
-                    (1) Driving Licence{'\n'}
-                    (2) Passport{'\n'}
-                    (3) Residence Permit{'\n'}
-                    (4) National ID. Also, please ensure:
-                </Text>
-                <View className="pl-2 mb-6">
-                    <Text className="text-[#0F172A] font-outfit-regular text-sm mb-1">• All information is readable and image is not blurry.</Text>
-                    <Text className="text-[#0F172A] font-outfit-regular text-sm mb-1">• All corners of the document are visible.</Text>
-                    <Text className="text-[#0F172A] font-outfit-regular text-sm mb-1">• We can see a picture of you.</Text>
-                    <Text className="text-[#0F172A] font-outfit-regular text-sm">• Information must match the back of the document.</Text>
-                </View>
+  // ── Continue ───────────────────────────────────────────────────────────────
+  const handleContinue = async () => {
+    if (!documentType) {
+      Alert.alert("Required", "Please select a document type.");
+      return;
+    }
+    if (!frontImage || !backImage) {
+      Alert.alert(
+        "Required",
+        "Please upload both the front and back of your document.",
+      );
+      return;
+    }
+    await saveSetupProgress("identity", {
+      documentType,
+      frontImageUrl: frontImage.remoteUrl,
+      backImageUrl: backImage.remoteUrl,
+      frontImageKey: frontImage.remoteKey,
+      backImageKey: backImage.remoteKey,
+    });
+    router.push("/setup/address");
+  };
+
+  // ── Photo Card ─────────────────────────────────────────────────────────────
+  const PhotoCard = ({
+    side,
+    image,
+    label,
+    hint,
+  }: {
+    side: Side;
+    image: UploadedImage | null;
+    label: string;
+    hint: string;
+  }) => (
+    <View className="mb-8">
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => handlePickImage(side)}
+        disabled={isUploading === side}
+        className="h-48 rounded-2xl overflow-hidden mb-2 border-2 border-dashed border-blue-200 bg-blue-50/40"
+      >
+        {isUploading === side ? (
+          <View className="flex-1 justify-center items-center gap-3">
+            <ActivityIndicator size="large" color="#0047AB" />
+            <Text className="text-[#0047AB] font-outfit-medium text-sm">
+              Uploading...
+            </Text>
+          </View>
+        ) : image ? (
+          <>
+            <Image
+              source={{ uri: image.localUri }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+            {/* Overlay edit badge */}
+            <View className="absolute bottom-2 right-2 bg-white/90 rounded-full px-3 py-1 flex-row items-center gap-1 shadow-sm">
+              <Ionicons name="pencil" size={12} color="#0047AB" />
+              <Text className="text-[#0047AB] font-outfit-medium text-xs ml-1">
+                Change
+              </Text>
             </View>
-
-            <Text className="font-outfit-medium text-[#0F172A] mb-2">Identification document</Text>
-            <TouchableOpacity className="bg-blue-50/50 h-12 flex-row items-center justify-between px-4 rounded-xl mb-8 border-0">
-                <Text className="text-[#0F172A] font-outfit-regular">{documentType}</Text>
-                <Ionicons name="chevron-down" size={20} color="#0F172A" />
-            </TouchableOpacity>
-
-            {/* Front Photo */}
-            <View className="mb-8">
-                <View className="bg-gray-100 h-48 rounded-xl justify-center items-center mb-2 border-2 border-dashed border-gray-300">
-                    {frontImage ? (
-                        <View className="items-center">
-                            <Ionicons name="checkmark" size={40} color="green" />
-                            <Text className="text-green-600 font-outfit-medium mt-2">Front Uploaded</Text>
-                        </View>
-                    ) : (
-                        <View className="items-center opacity-50">
-                            <View className="w-32 h-20 bg-gray-300 rounded-md mb-2" />
-                            <Text className="text-gray-500 font-outfit-regular text-xs">Driving Licence Front</Text>
-                        </View>
-                    )}
-                </View>
-                <Text className="text-[#0047AB] font-outfit-medium text-xs mb-4">Upload photo of the FRONT of your Identity Document.</Text>
-                <Button
-                    onPress={() => handleTakePhoto('front')}
-                    className="bg-[#06b6d4] rounded-xl" // Cyan-500/600 roughly matches the "Take Code" button color which looks lighter blue/cyan in the image
-                    // Actually the image shows a distinct blue, let's stick to a specific cyan-blue
-                    style={{ backgroundColor: '#00afcc' }}
-                >
-                    Take photo
-                </Button>
+          </>
+        ) : (
+          <View className="flex-1 justify-center items-center gap-3">
+            <View className="w-16 h-16 bg-blue-100 rounded-full justify-center items-center">
+              <Ionicons name="camera-outline" size={28} color="#0047AB" />
             </View>
+            <Text className="text-[#0047AB] font-outfit-medium text-sm">
+              {label}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
 
-            {/* Back Photo */}
-            <View className="mb-8">
-                <View className="bg-gray-100 h-48 rounded-xl justify-center items-center mb-2 border-2 border-dashed border-gray-300">
-                    {backImage ? (
-                        <View className="items-center">
-                            <Ionicons name="checkmark" size={40} color="green" />
-                            <Text className="text-green-600 font-outfit-medium mt-2">Back Uploaded</Text>
-                        </View>
-                    ) : (
-                        <View className="items-center opacity-50">
-                            <View className="w-32 h-20 bg-gray-300 rounded-md mb-2" />
-                            <Text className="text-gray-500 font-outfit-regular text-xs">Driving Licence Back</Text>
-                        </View>
-                    )}
-                </View>
-                <Text className="text-[#0047AB] font-outfit-medium text-xs mb-4">Upload photo of the BACK of your Identity Document.</Text>
-                <Button
-                    onPress={() => handleTakePhoto('back')}
-                    style={{ backgroundColor: '#00afcc' }}
-                    className="rounded-xl"
-                >
-                    Take photo
-                </Button>
-            </View>
+      <Text className="text-[#0047AB] font-outfit-medium text-xs mb-3">
+        {hint}
+      </Text>
 
-            <Button
-                onPress={handleContinue}
-                size="lg"
-                className="bg-blue-700 rounded-xl"
-            >
-                Continue
-            </Button>
-        </ScrollView>
-    );
+      <TouchableOpacity
+        onPress={() => handlePickImage(side)}
+        disabled={isUploading === side}
+        className="h-11 rounded-xl bg-[#00afcc] items-center justify-center flex-row gap-2"
+        activeOpacity={0.85}
+      >
+        <Ionicons name={image ? "refresh" : "camera"} size={16} color="#fff" />
+        <Text className="text-white font-outfit-bold text-sm ml-1">
+          {image ? "Retake photo" : "Take photo"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  return (
+    <ScrollView
+      className="flex-1 bg-white"
+      contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* Header */}
+      <View className="mb-6">
+        <Text className="text-xl font-outfit-bold text-[#0F172A] mb-1">
+          Identity Document
+        </Text>
+        <Text className="text-[#0047AB] font-outfit-medium text-base mb-4">
+          Please upload your Identity Document information
+        </Text>
+
+        <Text className="text-[#0F172A] font-outfit-regular text-sm mb-2">
+          The following documents are accepted:
+        </Text>
+        <Text className="text-[#0F172A] font-outfit-regular text-sm mb-4">
+          (1) Driving Licence{"\n"}
+          (2) Passport{"\n"}
+          (3) Residence Permit{"\n"}
+          (4) National ID. Also, please ensure:
+        </Text>
+        <View className="pl-2 mb-2">
+          <Text className="text-slate-500 font-outfit-regular text-xs mb-1">
+            • All information is readable and image is not blurry.
+          </Text>
+          <Text className="text-slate-500 font-outfit-regular text-xs mb-1">
+            • All corners of the document are visible.
+          </Text>
+          <Text className="text-slate-500 font-outfit-regular text-xs mb-1">
+            • We can see a picture of you.
+          </Text>
+          <Text className="text-slate-500 font-outfit-regular text-xs">
+            • Information must match the back of the document.
+          </Text>
+        </View>
+      </View>
+
+      {/* Document type selector */}
+      <Text className="font-outfit-medium text-[#0F172A] mb-2">
+        Identification document
+      </Text>
+      <TouchableOpacity
+        onPress={handleDocTypePicker}
+        className="bg-blue-50/50 h-12 flex-row items-center justify-between px-4 rounded-xl mb-8"
+        activeOpacity={0.7}
+      >
+        <Text
+          className={`font-outfit-regular ${documentType ? "text-[#0F172A]" : "text-[#9CA3AF]"}`}
+        >
+          {documentType ?? "Select document type"}
+        </Text>
+        <Ionicons name="chevron-down" size={20} color="#0F172A" />
+      </TouchableOpacity>
+
+      {/* Photo cards */}
+      <PhotoCard
+        side="front"
+        image={frontImage}
+        label="Tap to add front side"
+        hint="Upload photo of the FRONT of your Identity Document."
+      />
+      <PhotoCard
+        side="back"
+        image={backImage}
+        label="Tap to add back side"
+        hint="Upload photo of the BACK of your Identity Document."
+      />
+
+      <Button
+        onPress={handleContinue}
+        disabled={!!isUploading}
+        size="lg"
+        className="bg-blue-700 rounded-xl"
+      >
+        Continue
+      </Button>
+    </ScrollView>
+  );
 }

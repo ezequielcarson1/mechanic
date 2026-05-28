@@ -1,6 +1,7 @@
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { useAppointments } from '@/context/AppointmentsContext';
 import { useUser } from '@/context/UserContext';
+import { mediaDAO } from '@/lib/dao/MediaDAO';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Award, Camera, Car, ChevronRight, CreditCard, Heart, HelpCircle, Lock, LogOut, PlugZap, Settings, User } from 'lucide-react-native';
@@ -18,6 +19,8 @@ export default function ProfileScreen() {
   const [showOfflineModal, setShowOfflineModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [language, setLanguage] = useState<'en' | 'es'>('en');
+  const [localProfileUri, setLocalProfileUri] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -25,12 +28,20 @@ export default function ProfileScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
-      base64: true,
     });
 
-    if (!result.canceled) {
-      const imageUri = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      await updateUser({ profileImage: imageUri });
+    if (result.canceled) return;
+    const localUri = result.assets[0].uri;
+    setLocalProfileUri(localUri);
+    setIsUploadingPhoto(true);
+    try {
+      const uploaded = await mediaDAO.uploadPhoto(localUri);
+      await updateUser({ profileImage: uploaded.url });
+    } catch {
+      Alert.alert('Upload Failed', 'Could not upload profile photo. Please try again.');
+      setLocalProfileUri(null);
+    } finally {
+      setIsUploadingPhoto(false);
     }
   };
 
@@ -110,17 +121,26 @@ export default function ProfileScreen() {
     <ScrollView className="flex-1 bg-white">
       {/* User Info Section */}
       <View className="items-center mt-6 mb-6">
-        <TouchableOpacity onPress={pickImage} className="relative">
+        <TouchableOpacity onPress={pickImage} disabled={isUploadingPhoto} className="relative">
           <View className="w-24 h-24 bg-gray-100 rounded-full justify-center items-center border border-gray-200 overflow-hidden">
-            {user.profileImage ? (
+            {localProfileUri ? (
+              <Image source={{ uri: localProfileUri }} className="w-full h-full" />
+            ) : user.profileImage ? (
               <Image source={{ uri: user.profileImage }} className="w-full h-full" />
             ) : (
               <Camera size={32} color="#D1D5DB" />
             )}
+            {isUploadingPhoto && (
+              <View className="absolute inset-0 bg-black/40 items-center justify-center">
+                <ActivityIndicator color="#fff" />
+              </View>
+            )}
           </View>
-          <View className="absolute bottom-0 right-0 bg-blue-100 p-1.5 rounded-full border border-white">
-            <Text className="text-xs">✏️</Text>
-          </View>
+          {!isUploadingPhoto && (
+            <View className="absolute bottom-0 right-0 bg-blue-100 p-1.5 rounded-full border border-white">
+              <Text className="text-xs">✏️</Text>
+            </View>
+          )}
         </TouchableOpacity>
         <Text className="text-xl font-outfit-bold text-blue-900 mt-3">{user.name} {user.surname}</Text>
         <View className="bg-blue-50 px-3 py-1 rounded-full mt-1">

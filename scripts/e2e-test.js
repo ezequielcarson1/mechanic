@@ -12,7 +12,7 @@
  *
  * Usage:
  *   node scripts/e2e-test.js
- *   API_URL=http://20.124.131.193:3000 node scripts/e2e-test.js
+ *   API_URL=https://t9smggmz3a.us-east-1.awsapprunner.com node scripts/e2e-test.js
  */
 
 const BASE_URL = process.env.API_URL || 'http://localhost:3000';

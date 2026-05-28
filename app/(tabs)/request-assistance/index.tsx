@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Calendar, ChevronLeft, Clock, ShieldCheck, Video } from 'lucide-react-native';
+import { Calendar, Clock, ShieldCheck, Video } from 'lucide-react-native';
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
@@ -8,18 +8,7 @@ export default function RequestAssistanceTypeScreen() {
 
     return (
         <View className="flex-1 bg-white">
-            {/* Header */}
-            <View className="px-6 pt-14 pb-4 border-b border-gray-100 flex-row items-center">
-                <TouchableOpacity onPress={() => router.back()} className="mr-4">
-                    <ChevronLeft size={24} color="#0F172A" />
-                </TouchableOpacity>
-                <Text className="text-xl font-outfit-bold text-[#0F172A] flex-1 text-center">
-                    Assistance
-                </Text>
-                <TouchableOpacity onPress={() => router.replace('/(tabs)/assist')} className="ml-4">
-                    <Text className="text-red-500 font-outfit-medium text-xs">Cancel</Text>
-                </TouchableOpacity>
-            </View>
+
 
             <ScrollView className="flex-1 px-6 pt-6">
                 <Text className="text-blue-600 font-outfit-bold text-lg mb-4">Request a mechanic</Text>

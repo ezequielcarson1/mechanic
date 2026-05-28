@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Mechanic",
-    "slug": "Mechanic",
-    "version": "1.0.0",
+    "name": "Mechanic Assitance V2",
+    "slug": "mechanic-assistance-v2",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/mechanic-icon.png",
     "scheme": "mechanic",
@@ -10,25 +10,24 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.darkseed.mechanic",
+      "bundleIdentifier": "com.pixel.mechanic",
       "googleServicesFile": "./firebase/GoogleService-Info.plist",
-      "entitlements": {
-        "aps-environment": "production"
-      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.pixel.mechanic"
+            ]
+          }
+        ]
       }
     },
     "android": {
       "googleServicesFile": "./firebase/google-services.json",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyDE58awL21JKB4blzPYHmm75roqMfwwALs"
-        }
-      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/mechanic-icon.png",
@@ -37,7 +36,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.darkseed.mechanic"
+      "package": "com.pixel.mechanic"
     },
     "web": {
       "output": "static",
@@ -59,6 +58,13 @@
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for video calls.",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone for video calls."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {
@@ -68,16 +74,14 @@
       ],
       "./plugins/withFirebasePodfile",
       "./plugins/withFirebaseAuthAPNS",
+      "@react-native-google-signin/google-signin",
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 360,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "backgroundColor": "#ffffff"
         }
       ]
     ],
@@ -88,7 +92,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7a0b79d6-4a87-4444-ba02-2fb926b30ac1"
+        "projectId": "5e19e74e-d50d-4110-bbbb-2edd9eb3f4ee"
       }
     }
   }

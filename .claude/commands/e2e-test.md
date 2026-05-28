@@ -75,7 +75,7 @@ npm run web
 
 ```bash
 APP_URL=http://192.168.1.229:8081 npm run test:e2e   # different app host
-API_URL=http://20.124.131.193:3000 npm run test:e2e  # prod backend
+API_URL=https://t9smggmz3a.us-east-1.awsapprunner.com npm run test:e2e  # prod backend
 npx playwright test --headed --debug                  # step-by-step debug
 ```
 

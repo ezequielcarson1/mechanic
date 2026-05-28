@@ -2,11 +2,12 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useUser } from '@/context/UserContext';
 import { US_STATES, normalizeStreet } from '@/lib/address';
+import { mediaDAO } from '@/lib/dao/MediaDAO';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Camera, CheckCircle2 } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function PersonalInfoScreen() {
     const router = useRouter();
@@ -15,6 +16,8 @@ export default function PersonalInfoScreen() {
     const [showStateModal, setShowStateModal] = useState(false);
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [localProfileUri, setLocalProfileUri] = useState<string | null>(null);
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
     const scrollViewRef = useRef<ScrollView>(null);
     const streetContainerRef = useRef<View>(null);
@@ -39,11 +42,11 @@ export default function PersonalInfoScreen() {
         dob: user?.dob || '',
         profileImage: user?.profileImage,
         address: {
-            street: user?.address?.street || '',
-            apartment: user?.address?.apartment || '',
-            city: user?.address?.city || '',
-            state: user?.address?.state || '',
-            zip: user?.address?.zip || ''
+            street: user?.addresses?.[0]?.street || '',
+            apartment: user?.addresses?.[0]?.apartment || '',
+            city: user?.addresses?.[0]?.city || '',
+            state: user?.addresses?.[0]?.state || '',
+            zip: user?.addresses?.[0]?.zip || ''
         }
     });
 
@@ -57,11 +60,11 @@ export default function PersonalInfoScreen() {
                 dob: user.dob,
                 profileImage: user.profileImage,
                 address: {
-                    street: user.address?.street || '',
-                    apartment: user.address?.apartment || '',
-                    city: user.address?.city || '',
-                    state: user.address?.state || '',
-                    zip: user.address?.zip || ''
+                    street: user.addresses?.[0]?.street || '',
+                    apartment: user.addresses?.[0]?.apartment || '',
+                    city: user.addresses?.[0]?.city || '',
+                    state: user.addresses?.[0]?.state || '',
+                    zip: user.addresses?.[0]?.zip || ''
                 }
             });
         }
@@ -73,17 +76,41 @@ export default function PersonalInfoScreen() {
             allowsEditing: true,
             aspect: [1, 1],
             quality: 0.5,
-            base64: true,
         });
 
-        if (!result.canceled) {
-            const imageUri = `data:image/jpeg;base64,${result.assets[0].base64}`;
-            setFormData({ ...formData, profileImage: imageUri });
+        if (result.canceled) return;
+        const localUri = result.assets[0].uri;
+        setLocalProfileUri(localUri);
+        setIsUploadingPhoto(true);
+        try {
+            const uploaded = await mediaDAO.uploadPhoto(localUri);
+            setFormData((prev) => ({ ...prev, profileImage: uploaded.url }));
+        } catch {
+            Alert.alert('Upload Failed', 'Could not upload profile photo. Please try again.');
+            setLocalProfileUri(null);
+        } finally {
+            setIsUploadingPhoto(false);
         }
     };
 
+    const getPlainPhoneNumber = (text: string) => {
+        if (!text) return '';
+        const cleaned = text.replace(/\D/g, '');
+        if (cleaned.length === 10) {
+            return `+1${cleaned}`;
+        }
+        if (cleaned.length === 11 && cleaned.startsWith('1')) {
+            return `+${cleaned}`;
+        }
+        return `+${cleaned}`;
+    };
+
     const handleUpdate = async () => {
-        await updateUser(formData);
+        const payloadToUpdate = {
+            ...formData,
+            phone: getPlainPhoneNumber(formData.phone)
+        };
+        await updateUser(payloadToUpdate);
         setShowSuccessModal(true);
     };
 
@@ -208,17 +235,26 @@ export default function PersonalInfoScreen() {
 
                 {/* Profile Image Section */}
                 <View className="items-center mb-8">
-                    <TouchableOpacity onPress={pickImage} className="relative">
+                    <TouchableOpacity onPress={pickImage} disabled={isUploadingPhoto} className="relative">
                         <View className="w-24 h-24 bg-gray-100 rounded-full justify-center items-center border border-gray-200 overflow-hidden">
-                            {formData.profileImage ? (
+                            {localProfileUri ? (
+                                <Image source={{ uri: localProfileUri }} className="w-full h-full" />
+                            ) : formData.profileImage ? (
                                 <Image source={{ uri: formData.profileImage }} className="w-full h-full" />
                             ) : (
                                 <Camera size={32} color="#D1D5DB" />
                             )}
+                            {isUploadingPhoto && (
+                                <View className="absolute inset-0 bg-black/40 items-center justify-center">
+                                    <ActivityIndicator color="#fff" />
+                                </View>
+                            )}
                         </View>
-                        <View className="absolute bottom-0 right-0 bg-blue-100 p-1.5 rounded-full border border-white">
-                            <Text className="text-xs">✏️</Text>
-                        </View>
+                        {!isUploadingPhoto && (
+                            <View className="absolute bottom-0 right-0 bg-blue-100 p-1.5 rounded-full border border-white">
+                                <Text className="text-xs">✏️</Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
                     <Text className="text-gray-500 font-outfit-regular mt-2 text-xs">Tap to change photo</Text>
                 </View>
